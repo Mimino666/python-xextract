@@ -7,19 +7,19 @@ class XPathExtractor(object):
     _parser = etree.HTMLParser
     _tostring_method = 'html'
 
-    def __init__(self, text=None, url=None, namespaces=None, _root=None):
-        self.url = url
+    def __init__(self, body=None, namespaces=None, _root=None):
         self.namespaces = namespaces
         if _root is None:
-            _root = self._get_root(text)
+            _root = self._get_root(body)
         self._root = _root
 
-    def _get_root(self, text):
-        text = text.strip() or '<html/>'
-        if isinstance(text, unicode):
-            text = text.encode('utf-8')
-        parser = self._parser(recover=True, encoding='utf-8')
-        return etree.fromstring(text, parser=parser, base_url=self.url)
+    def _get_root(self, body, encoding=None):
+        body = body.strip() or '<html/>'
+        if isinstance(body, unicode):
+            body = body.encode('utf-8')
+            encoding = 'utf-8'
+        parser = self._parser(recover=True, encoding=encoding)
+        return etree.fromstring(body, parser=parser)
 
     def select(self, xpath):
         if not hasattr(self._root, 'xpath'):
@@ -51,9 +51,6 @@ class XPathExtractor(object):
         if self.namespaces is None:
             self.namespaces = {}
         self.namespaces[prefix] = uri
-
-    def compile_xpath(self, xpath):
-        return etree.XPath(xpath, namespaces=self.namespaces)
 
     def __nonzero__(self):
         return bool(self.extract())
