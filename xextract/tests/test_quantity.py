@@ -1,18 +1,18 @@
 import unittest
 
-from xextract.quantity import Quantity
+from xextract.quantity import Quantity, Q_INVALID
 
 
 class TestQuantity(unittest.TestCase):
     def test_create(self):
         self.assertEqual(Quantity().raw_quantity, '*')
         good = ['   *', ' +    ', '?    ', ' 1321     ', '007',
-            ' 8800,    9231   ', '1,2', '9999', '5,5']
+            ' 8800,    9231   ', '1,2', '9999', '5,5', 9999, '0', '10000', 0, 10000]
         for g in good:
-            Quantity(g)
+            quantity = Quantity(g)
+            self.assertNotEqual(quantity.quantity_type, Q_INVALID)
 
-        bad = ['', None, ' * * ', '+*', '', '1 2', '1,2,3', '10000',
-            '+2', '-2', '3,2']
+        bad = ['', None, ' * * ', '+*', '  ', '1 2', '1,2,3', '+2', '-2', '3,2', 1.0]
         for b in bad:
             self.assertRaises(Exception, Quantity, b)
 
@@ -37,12 +37,16 @@ class TestQuantity(unittest.TestCase):
         self._test_good(q, [0,1])
         self._test_bad(q, [-2,-1,2,3,10,100])
 
-    def test_dig_1d(self):
+    def test_1d(self):
         q = Quantity('47')
         self._test_good(q, [47])
-        self._test_bad(q, [0,1,-1,-47,100])
+        self._test_bad(q, [0,1,-1,-47, 46, 48, 100])
 
-    def test_dig_2d(self):
+        q = Quantity(47)
+        self._test_good(q, [47])
+        self._test_bad(q, [0,1,-1,-47, 46, 48, 100])
+
+    def test_2d(self):
         q = Quantity('5, 10')
         self._test_good(q, [5,6,7,8,9,10])
         self._test_bad(q, [0,1,2,3,4,11,12,13,-5,-10])

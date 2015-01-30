@@ -1,6 +1,9 @@
 import re
 
+import six
 
+
+# quantity types
 Q_INVALID = 0
 Q_STAR = 1
 Q_PLUS = 2
@@ -19,51 +22,60 @@ class Quantity(object):
         * - zero or more items
         + - one or more items
         ? - zero or one item
-        num - specified number of items (0 <= num <= 9999)
-        num1, num2 - number of items in interval [num1, num2] (0 <= num1 <= num2 <= 9999).
+        num - specified number of items (0 <= num)
+        num1, num2 - number of items in interval [num1, num2] (0 <= num1 <= num2).
     '''
 
     _quant_re = re.compile(
-        r'^\s*(\*|\+|\?|\s*(\d{1,4})\s*|\s*(\d{1,4})\s*,\s*(\d{1,4})\s*)\s*$')
+        r'^\s*(\*|\+|\?|\s*(\d+)\s*|\s*(\d+)\s*,\s*(\d+)\s*)\s*$', re.UNICODE)
 
     def __init__(self, quantity='*'):
         self.raw_quantity = quantity
-        self.quantity = self._parse_quantity(quantity)
-        if self.quantity == Q_INVALID:
-            raise ValueError('Invalid quantity syntax: %s' % quantity)
+        self.quantity_type = self._parse_quantity(quantity)
+        if self.quantity_type == Q_INVALID:
+            raise ValueError('Invalid quantity: "%s"' % quantity)
 
     def check_quantity(self, n):
-        if not isinstance(n, int):
-            raise ValueError('Invalid argument for `check_quantity()`.'
-                'Integer expected, %s received: %s' % (type(n), n))
-        if self.quantity == Q_STAR:
+        if not isinstance(n, six.integer_types):
+            raise ValueError('Invalid argument for "check_quantity()".'
+                'Integer expected, %s received: "%s"' % (type(n), n))
+        if self.quantity_type == Q_STAR:
             return n >= 0
-        elif self.quantity == Q_PLUS:
+        elif self.quantity_type == Q_PLUS:
             return n >= 1
-        elif self.quantity == Q_QUES:
+        elif self.quantity_type == Q_QUES:
             return n == 0 or n == 1
-        elif self.quantity == Q_1D:
-            return n == self.dig
-        elif self.quantity == Q_2D:
-            return self.dig1 <= n and n <= self.dig2
+        elif self.quantity_type == Q_1D:
+            return n == self.num
+        elif self.quantity_type == Q_2D:
+            return self.num1 <= n and n <= self.num2
         return False
 
     def _parse_quantity(self, quantity):
+        if isinstance(quantity, six.integer_types):
+            self.num = quantity
+            if self.num < 0:
+                return Q_INVALID
+            else:
+                return Q_1D
+
         match = self._quant_re.match(quantity)
         if not match:
             return Q_INVALID
 
-        if match.group(4) is not None:
-            self.dig1 = int(match.group(3))
-            self.dig2 = int(match.group(4))
-            if self.dig1 < 0 or self.dig1 > self.dig2:
+        if match.group(4):
+            self.num1 = int(match.group(3))
+            self.num2 = int(match.group(4))
+            if self.num1 < 0 or self.num1 > self.num2:
                 return Q_INVALID
-            return Q_2D
-        elif match.group(2) is not None:
-            self.dig = int(match.group(2))
-            if self.dig < 0:
+            else:
+                return Q_2D
+        elif match.group(2):
+            self.num = int(match.group(2))
+            if self.num < 0:
                 return Q_INVALID
-            return Q_1D
+            else:
+                return Q_1D
         elif match.group(1) == '*':
             return Q_STAR
         elif match.group(1) == '+':
@@ -71,3 +83,8 @@ class Quantity(object):
         elif match.group(1) == '?':
             return Q_QUES
         return Q_INVALID
+
+    @property
+    def is_single(self):
+        return (self.quantity_type == Q_QUES or
+            (self.quantity_type == Q_1D and self.num <= 1))
