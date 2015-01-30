@@ -25,6 +25,7 @@ class BaseSelector(object):
         else:
             self.raw_xpath = GenericTranslator().css_to_xpath(css)
         self.compiled_xpath = None
+        self.namespaces = None
 
     def parse_html(self, body, url=None):
         extractor = HtmlXPathExtractor(body)
@@ -38,16 +39,17 @@ class BaseSelector(object):
         context = {}
         if url:
             context['url'] = url
-        return self._parse(extractor, context, namespaces)
+        self.namespaces = namespaces
+        return self._parse(extractor, context)
 
-    def _parse(self, extractor, context, namespaces=None):
+    def _parse(self, extractor, context):
         # compile xpath expression for better performance
         if self.compiled_xpath is None:
-            self.compiled_xpath = etree.XPath(self.raw_xpath, namespaces=namespaces)
+            self.compiled_xpath = etree.XPath(self.raw_xpath, namespaces=self.namespaces)
         nodes = extractor.select(self.compiled_xpath)
-        return self._process_nodes(nodes, context, namespaces)
+        return self._process_nodes(nodes, context)
 
-    def _process_nodes(self, nodes, context, namespaces):
+    def _process_nodes(self, nodes, context):
         raise NotImplementedError
 
 
@@ -56,10 +58,10 @@ class Prefix(BaseSelector):
         super(Prefix, self).__init__(**kwargs)
         self.children = children
 
-    def _process_nodes(self, nodes, context, namespaces):
+    def _process_nodes(self, nodes, context):
         parsed_data = {}
         for child in self.children:
-            parsed_data.update(child._parse(nodes, context, namespaces))
+            parsed_data.update(child._parse(nodes, context))
         return parsed_data
 
 
@@ -90,19 +92,19 @@ class Group(BaseNamedSelector):
         super(Group, self).__init__(**kwargs)
         self.children = children
 
-    def _process_nodes(self, nodes, context, namespaces):
+    def _process_nodes(self, nodes, context):
         self._check_quantity(nodes)
         values = []
         for node in nodes:
             child_parsed_data = {}
             for child in self.children:
-                child_parsed_data.update(child._parse(node, context, namespaces))
+                child_parsed_data.update(child._parse(node, context))
             values.append(child_parsed_data)
         return {self.name: self._flatten_values(values)}
 
 
 class Element(BaseNamedSelector):
-    def _process_nodes(self, nodes, context, namespaces):
+    def _process_nodes(self, nodes, context):
         self._check_quantity(nodes)
         values = [node._root for node in nodes]
         return {self.name: self._flatten_values(values)}
@@ -118,7 +120,7 @@ class String(BaseNamedSelector):
         else:
             self.attr = '@' + attr
 
-    def _process_nodes(self, nodes, context, namespaces):
+    def _process_nodes(self, nodes, context):
         self._check_quantity(nodes)
         values = []
         for node in nodes:
@@ -132,7 +134,7 @@ class Url(String):
         kwargs.setdefault('attr', 'href')
         super(Url, self).__init__(**kwargs)
 
-    def _process_nodes(self, nodes, context, namespaces):
+    def _process_nodes(self, nodes, context):
         values = []
         for node in nodes:
             value = ''.join(node.select(self.attr).extract())
