@@ -1,1 +1,1 @@
-from .selectors import Prefix, Group, Element, String, Url
+from .selectors import Prefix, Group, Element, String, Url, ParsingError
