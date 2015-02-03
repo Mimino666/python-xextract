@@ -76,7 +76,7 @@ class BaseNamedSelector(BaseSelector):
         # check the number of nodes
         if not self.quantity.check_quantity(num_nodes):
             raise ParsingError(
-                'Number of "%s" nodes %s does not match the expected quantity "%s".' %
+                'Number of "%s" elements, %s, does not match the expected quantity "%s".' %
                 (self.name, num_nodes, self.quantity.raw_quantity))
         return nodes
 
