@@ -2,16 +2,27 @@
 xextract
 ********
 
-*NOTE*: library is still under construction.
+*NOTE*: **xextract** is still under construction.
 
-**xextract** is an HTML parsing library that solves the following problems for you:
+**xextract** is an HTML parsing library that is simple enough to write a one-liner, yet powerful enough to be a part bigger projects.
+
+Features
+--------
 
 - Simple declarative style of parsers
 - Parsing of HTML and XML documents
-- Use xpaths or css selectors to extract the data
-- Parsers are self-validating and let you know when the structure of website has changed
+- Write **xpaths** or **css selectors** to extract the data
+- Built-in self-validation to let you know when the structure of the website has changed
 - Speed - under the hood the library uses lxml library (http://lxml.de/) with compiled xpath selectors
 - You can optionally define the parsers in external XML files to separate the parsing from other business logic
+
+
+**Table of Contents**
+
+.. contents::
+    :local:
+    :depth: 2
+    :backlinks: none
 
 
 ====================
@@ -21,14 +32,14 @@ A little taste of it
 .. code-block:: python
 
   from xextract import Prefix, Group, String, Url
-  # fetch web page
+  # fetch the website
   import requests
   response = requests.get('https://www.linkedin.com/in/barackobama')
 
   parser = Prefix(css='#profile', children=[
       String(name='name', css='.full-name', quant=1),
       String(name='title', css='.title', quant=1),
-      Group(name='experience', css='#background-experience .section-item', quant='*', children=[
+      Group(name='jobs', css='#background-experience .section-item', quant='*', children=[
           String(name='title', css='h4', quant=1),
           String(name='company', css='h5', quant=1, attr='_all_text'),
           Url(name='company_url', css='h5 a', quant='?'),
@@ -44,7 +55,7 @@ Output:
 
   {'name': u'Barack Obama',
    'title': u'President of the United States of America',
-   'experience': [
+   'jobs': [
        {'company': u'United States of America',
         'company_url': None,
         'description': u'I am serving as the 44th President of the United States of America.',
@@ -75,7 +86,7 @@ To install **xextract**, simply:
 
 Requirements: six, lxml, cssselect
 
-Python 2.6, 2.7 and 3.x are supported.
+Supported Python versions 2.6, 2.7, 3.x.
 
 
 ===========
@@ -101,13 +112,13 @@ To parse out the name from the Linkedin profile, call:
     {'name': u'Barack Obama'}
 
 
-You can see that the parsed data are returned in a dictionary.
+You can see that the **parsed data are returned in a dictionary**.
 
 Parameters we passed to the parser have the following meaning:
 
 - ``name`` - dictionary key under which to store the parsed data.
-- ``css`` - css selector to the HTML element.
-- ``quant`` - number of an HTML elements we expect to match with the css selector. In this case we expect exactly one element with the css class ``full-name``. If the number of elements wouldn't match, ``ParsingError`` exception is raised:
+- ``css`` - css selector to the HTML element containing the data.
+- ``quant`` - number of an HTML elements we expect to match with the css selector. In this case we expect exactly one element. If the number of elements wouldn't match, ``ParsingError`` exception is raised:
 
     .. code-block:: python
 
@@ -126,7 +137,7 @@ In the previous example we could have used xpath instead of css selector:
 
 -----
 
-By default ``String`` parses out the text content of the element. To extract the data from an HTML attribute, pass ``attr`` parameter:
+By default, ``String`` parses out the text content of the element. To extract the data from an HTML attribute, use ``attr`` parameter:
 
 .. code-block:: python
 
@@ -147,10 +158,10 @@ To parse out the number of connections, which are stored like this:
 
 
 We would like to extract the whole string "*500+ connections*".
-By default ``String`` parser extracts only the text from the matched elements, but not their descendants.
+By default, ``String`` parser extracts only the text from the matched elements, but not their descendants.
 In the above case, if we matched ``.member-connections`` element, by default it would parse out only the string "*connections*".
 
-To parse out the text out of every descendant element, pass the ``attr`` parameter with the special value ``_all_text``:
+To parse out the text out of every descendant element, use the ``attr`` parameter with the special value ``_all_text``:
 
 .. code-block:: python
 
@@ -173,10 +184,52 @@ the parser will parse out the absolute url address.
 We have also passed ``attr`` parameter to the parser with which we specified that we want
 to parse the value out of an HTML attribute ``src``.
 
+-----
 
-=========
-Reference
-=========
+To parse out the list of jobs and from each job we want the company name and the title,
+use ``Group`` parser to group the data for each job together:
+
+.. code-block:: python
+
+    >>> Group(name='jobs', css='#background-experience .section-item', quant='*', children=[
+            String(name='title', css='h4', quant=1),
+            String(name='company', css='h5', quant=1, attr='_all_text')
+        ]).parse_html(html)
+    {'jobs': [
+        {'company': u'United States of America', 'title': u'President'},
+        {'company': u'US Senate (IL-D)', 'title': u'US Senator'},
+        {'company': u'Illinois State Senate', 'title': u'State Senator'},
+        {'company': u'University of Chicago Law School', 'title': u'Senior Lecturer in Law'}]}
+
+
+In this case the ``Group`` parser's css selector "*#background-experience .section-item*" matched
+four elements, each of those containing a single ``h4`` and ``h5`` elements.
+
+
+================
+Parser reference
+================
+
+------
+String
+------
+
+This is the most basic parser.
+
+---
+Url
+---
+
+
+
+-------
+Element
+-------
+
+
+==================
+Argument reference
+==================
 
 -----------
 css / xpath
