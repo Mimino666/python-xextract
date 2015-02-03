@@ -54,10 +54,19 @@ class Quantity(object):
     def _parse_quantity(self, quantity):
         if isinstance(quantity, six.integer_types):
             self.num = quantity
-            if self.num < 0:
-                return Q_INVALID
-            else:
+            if 0 <= self.num:
                 return Q_1D
+            else:
+                return Q_INVALID
+
+        if isinstance(quantity, (list, tuple)) and len(quantity) == 2:
+            self.num1, self.num2 = quantity
+            if (isinstance(self.num1, six.integer_types) and
+                    isinstance(self.num2, six.integer_types) and
+                    0 <= self.num1 <= self.num2):
+                return Q_2D
+            else:
+                return Q_INVALID
 
         match = self._quant_re.match(quantity)
         if not match:
@@ -66,16 +75,16 @@ class Quantity(object):
         if match.group(4):
             self.num1 = int(match.group(3))
             self.num2 = int(match.group(4))
-            if self.num1 < 0 or self.num1 > self.num2:
-                return Q_INVALID
-            else:
+            if 0 <= self.num1 <= self.num2:
                 return Q_2D
+            else:
+                return Q_INVALID
         elif match.group(2):
             self.num = int(match.group(2))
-            if self.num < 0:
-                return Q_INVALID
-            else:
+            if 0 <= self.num:
                 return Q_1D
+            else:
+                return Q_INVALID
         elif match.group(1) == '*':
             return Q_STAR
         elif match.group(1) == '+':

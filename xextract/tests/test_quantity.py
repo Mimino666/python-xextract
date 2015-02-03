@@ -7,12 +7,14 @@ class TestQuantity(unittest.TestCase):
     def test_create(self):
         self.assertEqual(Quantity().raw_quantity, '*')
         good = ['   *', ' +    ', '?    ', ' 1321     ', '007',
-            ' 8800,    9231   ', '1,2', '9999', '5,5', 9999, '0', '10000', 0, 10000]
+            ' 8800,    9231   ', '1,2', '9999', '5,5', 9999, '0', '10000', 0, 10000,
+            (1,2), (0,0)]
         for g in good:
             quantity = Quantity(g)
             self.assertNotEqual(quantity.quantity_type, Q_INVALID)
 
-        bad = ['', None, ' * * ', '+*', '  ', '1 2', '1,2,3', '+2', '-2', '3,2', 1.0]
+        bad = ['', None, ' * * ', '+*', '  ', '1 2', '1,2,3', '+2', '-2', '3,2', 1.0,
+                -1, (3,2), (-1,5)]
         for b in bad:
             self.assertRaises(Exception, Quantity, b)
 
@@ -48,6 +50,10 @@ class TestQuantity(unittest.TestCase):
 
     def test_2d(self):
         q = Quantity('5, 10')
+        self._test_good(q, [5,6,7,8,9,10])
+        self._test_bad(q, [0,1,2,3,4,11,12,13,-5,-10])
+
+        q = Quantity((5, 10))
         self._test_good(q, [5,6,7,8,9,10])
         self._test_bad(q, [0,1,2,3,4,11,12,13,-5,-10])
 
