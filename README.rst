@@ -6,8 +6,7 @@ xextract
 
 **xextract** is an HTML parsing library that is simple enough to write a one-liner, yet powerful enough to be a part bigger projects.
 
-Features
---------
+**Table of Contents**
 
 - Simple declarative style of parsers
 - Parsing of HTML and XML documents
@@ -86,7 +85,7 @@ To install **xextract**, simply:
 
 Requirements: six, lxml, cssselect
 
-Supported Python versions 2.6, 2.7, 3.x.
+Supported Python versions are 2.6, 2.7, 3.x.
 
 
 ===========
@@ -98,7 +97,7 @@ so include the following code to the top of the file:
 
 .. code-block:: python
 
-    from xextract import Prefix, Group, Element, String, Url
+    from xextract import Prefix, Group, Element, String, Url, DateTime
     import requests
     response = requests.get('https://www.linkedin.com/in/barackobama')
     html, url = response.text, response.url
@@ -118,7 +117,7 @@ Parameters we passed to the parser have the following meaning:
 
 - ``name`` - dictionary key under which to store the parsed data.
 - ``css`` - css selector to the HTML element containing the data.
-- ``quant`` - number of an HTML elements we expect to match with the css selector. In this case we expect exactly one element. If the number of elements wouldn't match, ``ParsingError`` exception is raised:
+- ``quant`` - number of HTML elements we expect to match with the css selector. In this case we expect exactly one element. If the number of elements doesn't match, ``ParsingError`` exception is raised:
 
     .. code-block:: python
 
@@ -157,11 +156,11 @@ To parse out the number of connections, which are stored like this:
     </div>
 
 
-We would like to extract the whole string "*500+ connections*".
-By default, ``String`` parser extracts only the text from the matched elements, but not their descendants.
-In the above case, if we matched ``.member-connections`` element, by default it would parse out only the string "*connections*".
+We would like to extract the whole text "*500+ connections*".
+By default, ``String`` parser extracts only the text directly from the matched elements, but not their descendants.
+In the above case, if we matched ``.member-connections`` element, by default it would parse out only the text "*connections*".
 
-To parse out the text out of every descendant element, use the ``attr`` parameter with the special value ``_all_text``:
+To parse out the text out of every descendant element, use the ``attr`` parameter with the special value ``"_all_text"``:
 
 .. code-block:: python
 
@@ -181,20 +180,20 @@ To parse out the url of the profile picture, use ``Url`` parser instead of ``Str
 
 When you use ``Url`` parser and pass ``url`` parameter to ``parse()`` method,
 the parser will parse out the absolute url address.
-We have also passed ``attr`` parameter to the parser with which we specified that we want
-to parse the value out of an HTML attribute ``src``.
+By default, ``Url`` parses the value out of ``"href"`` attribute of the matched element.
+If you want to parse the value out of a different attribute (e.g. ``"src"``), pass it as ``attr`` parameter.
 
 -----
 
-To parse out the list of jobs and from each job we want the company name and the title,
-use ``Group`` parser to group the data for each job together:
+To parse out the list of jobs and from each job to store the company name and the title,
+use ``Group`` parser to group the data of each job together:
 
 .. code-block:: python
 
     >>> Group(name='jobs', css='#background-experience .section-item', quant='*', children=[
-            String(name='title', css='h4', quant=1),
-            String(name='company', css='h5', quant=1, attr='_all_text')
-        ]).parse(html)
+    ...     String(name='title', css='h4', quant=1),
+    ...     String(name='company', css='h5', quant=1, attr='_all_text')
+    ... ]).parse(html)
     {'jobs': [
         {'company': u'United States of America', 'title': u'President'},
         {'company': u'US Senate (IL-D)', 'title': u'US Senator'},
