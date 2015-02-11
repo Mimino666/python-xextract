@@ -223,28 +223,46 @@ Parser reference
 String
 ------
 
-This is the most basic parser.
+**Parameters**: `name`_, `css / xpath`_, `quant`_, `attr`_, `namespaces`_
+
+Extract the string value
 
 ---
 Url
 ---
 
 
+--------
+DateTime
+--------
+
 
 -------
 Element
 -------
+
+-----
+Group
+-----
+
+------
+Prefix
+------
 
 
 =================
 Parser parameters
 =================
 
+----
+name
+----
+
 -----------
 css / xpath
 -----------
 
-**Parsers**: ``Prefix``, ``Group``, ``Element``, ``String``, ``Url``, ``DateTime``
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_, `Prefix`_
 
 Use either ``css`` or ``xpath`` parameter (but not both) to select the elements from which to extract the data.
 
@@ -269,7 +287,7 @@ The elements of children parsers of ``Prefix`` and ``Group`` parsers are always 
 quant
 -----
 
-**Parsers**: ``Group``, ``Element``, ``String``, ``Url``, ``DateTime``
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_
 
 **Default value**: ``'*'``
 
@@ -309,18 +327,84 @@ Examples:
 
     >>> String(name='name', css='.name', quant=1).parse(html)
     {'name': u'Barack Obama'}
+
     >>> String(name='name', css='.name', quant='1').parse(html)  # same as above
     {'name': u'Barack Obama'}
+
     >>> String(name='name', css='.name', quant=(1,2)).parse(html)
     {'name': [u'Barack Obama']}
+
     >>> String(name='name', css='.name', quant='1,2').parse(html)  # same as above
     {'name': [u'Barack Obama']}
+
     >>> String(name='middle-name', css='.middle', quant='?').parse(html)
     {'middle-name': None}
+
     >>> String(name='job-titles', css='#background-experience .section-item h4', quant='+').parse(html)
     {'job-titles': [u'President', u'US Senator', u'State Senator', u'Senior Lecturer in Law']}
+
     >>> String(name='friends', css='.friend', quant='*').parse(html)
     {'friends': []}
+
     >>> String(name='friends', css='.friend', quant='+').parse(html)
     xextract.selectors.ParsingError: Number of "friends" elements, 0, does not match the expected quantity "+".
 
+
+----
+attr
+----
+
+**Parsers**: `String`_, `Url`_, `DateTime`_
+
+**Default value**: ``'href'`` for ``Url`` parser. ``'_text'`` otherwise.
+
+Use ``attr`` parameter to specify what to extract from the matched element.
+
++-------------------+-----------------------------------------------------+
+| Value of ``attr`` | Meaning                                             |
++===================+=====================================================+
+| ``'_text'``       | Extract the text content of the matched element.    |
++-------------------+-----------------------------------------------------+
+| ``'_all_text'``   | Extract and concatenate the text content of         |
+|                   | the matched element and all its descendants.        |
++-------------------+-----------------------------------------------------+
+| ``att_name``      | Extract the value out of ``att_name`` attribute of  |
+|                   | the matched element.                                |
+|                   |                                                     |
+|                   | If such attribute doesn't exist, empty string is    |
+|                   | returned.                                           |
++-------------------+-----------------------------------------------------+
+
+For the following HTML structure:
+
+.. code-block:: html
+
+    <span class="name">Barack <strong>Obama</strong> III.</span>
+    <a href="/test">Link</a>
+
+Here are the different scenarios:
+
+.. code-block:: python
+
+    >>> String(name='name', css='.name', quant=1).parse(html)
+    {'name': u'Barack  III.'}
+
+    >>> String(name='name', css='.name', quant=1, attr='_text').parse(html)  # same as above
+    {'name': u'Barack  III.'}
+
+    >>> String(name='full-name', css='.name', quant=1, attr='_all_text').parse(html)
+    {'full-name': u'Barack Obama III.'}
+
+    >>> String(name='link', css='a', quant='1').parse(html)  # String extracts text content by default
+    {'link': u'Link'}
+
+    >>> Url(name='link', css='a', quant='1').parse(html)  # Url extracts href by default
+    {'link': u'/test'}
+
+    >>> String(name='id', css='a', quant='1', attr='id').parse(html)  # non-existent attributes return empty string
+    {'id': u''}
+
+
+----------
+namespaces
+----------
