@@ -17,7 +17,7 @@ class ParsingError(Exception):
 
 
 class BaseSelector(object):
-    def __init__(self, css=None, xpath=None):
+    def __init__(self, css=None, xpath=None, namespaces=None):
         if (xpath is None) == (css is None):
             raise SelectorError('Exactly one of "xpath" or "css" attributes must be specified.')
 
@@ -25,22 +25,24 @@ class BaseSelector(object):
             self.raw_xpath = xpath
         else:
             self.raw_xpath = GenericTranslator().css_to_xpath(css)
-        self.compiled_xpath = None
-        self.namespaces = None
-
-    def parse_html(self, body, url=None):
-        extractor = HtmlXPathExtractor(body)
-        context = {}
-        if url:
-            context['url'] = url
-        return self._parse(extractor, context)
-
-    def parse_xml(self, body, namespaces=None, url=None):
-        extractor = XmlXPathExtractor(body, namespaces=namespaces)
-        context = {}
-        if url:
-            context['url'] = url
         self.namespaces = namespaces
+        self._propagate_namespaces()
+
+    def _propagate_namespaces(self):
+        if self.namespaces and hasattr(self, 'children'):
+            for child in self.children:
+                if not child.namespaces:
+                    child.namespaces = self.namespaces
+                    child._propagate_namespaces()
+
+    def parse(self, body, url=None):
+        if '<?xml' in body[:128]:
+            extractor = XmlXPathExtractor(body)
+        else:
+            extractor = HtmlXPathExtractor(body)
+        context = {}
+        if url:
+            context['url'] = url
         return self._parse(extractor, context)
 
     def _parse(self, extractor, context):
@@ -59,8 +61,8 @@ class BaseSelector(object):
 
 class Prefix(BaseSelector):
     def __init__(self, children, **kwargs):
-        super(Prefix, self).__init__(**kwargs)
         self.children = children
+        super(Prefix, self).__init__(**kwargs)
 
     def _process_nodes(self, nodes, context):
         parsed_data = {}
@@ -71,9 +73,9 @@ class Prefix(BaseSelector):
 
 class BaseNamedSelector(BaseSelector):
     def __init__(self, name, quant='*', **kwargs):
-        super(BaseNamedSelector, self).__init__(**kwargs)
         self.name = name
         self.quantity = Quantity(quant)
+        super(BaseNamedSelector, self).__init__(**kwargs)
 
     def _check_quantity(self, nodes):
         num_nodes = len(nodes)
@@ -93,8 +95,8 @@ class BaseNamedSelector(BaseSelector):
 
 class Group(BaseNamedSelector):
     def __init__(self, children, **kwargs):
-        super(Group, self).__init__(**kwargs)
         self.children = children
+        super(Group, self).__init__(**kwargs)
 
     def _process_nodes(self, nodes, context):
         self._check_quantity(nodes)
@@ -116,13 +118,13 @@ class Element(BaseNamedSelector):
 
 class String(BaseNamedSelector):
     def __init__(self, attr='_text', **kwargs):
-        super(String, self).__init__(**kwargs)
         if attr == '_text':
             self.attr = 'text()'
         elif attr == '_all_text':
             self.attr = 'descendant-or-self::*/text()'
         else:
             self.attr = '@' + attr
+        super(String, self).__init__(**kwargs)
 
     def _process_nodes(self, nodes, context):
         self._check_quantity(nodes)

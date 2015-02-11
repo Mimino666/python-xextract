@@ -46,7 +46,7 @@ A little taste of it
           String(name='description', css='.description', quant='?')
       ])
   ])
-  parser.parse_html(response.text, url=response.url)
+  parser.parse(response.text, url=response.url)
 
 
 Output:
@@ -108,7 +108,7 @@ To parse out the name from the Linkedin profile, call:
 
 .. code-block:: python
 
-    >>> String(name='name', css='.full-name', quant=1).parse_html(html)
+    >>> String(name='name', css='.full-name', quant=1).parse(html)
     {'name': u'Barack Obama'}
 
 
@@ -122,7 +122,7 @@ Parameters we passed to the parser have the following meaning:
 
     .. code-block:: python
 
-        >>> String(name='name', css='.full-name', quant=2).parse_html(html)
+        >>> String(name='name', css='.full-name', quant=2).parse(html)
         xextract.selectors.ParsingError: Number of "name" elements, 1, does not match the expected quantity "2".
 
 -----
@@ -131,7 +131,7 @@ In the previous example we could have used xpath instead of css selector:
 
 .. code-block:: python
 
-    >>> String(name='name', xpath='*[@class="full-name"]', quant=1).parse_html(html)
+    >>> String(name='name', xpath='*[@class="full-name"]', quant=1).parse(html)
     {'name': u'Barack Obama'}
 
 
@@ -141,7 +141,7 @@ By default, ``String`` parses out the text content of the element. To extract th
 
 .. code-block:: python
 
-    >>> String(name='demographics-css-class', css='#demographics', quant=1, attr='class').parse_html(html)
+    >>> String(name='demographics-css-class', css='#demographics', quant=1, attr='class').parse(html)
     {'demographics-css-class': u'demographic-info adr editable-item'}
 
 
@@ -165,7 +165,7 @@ To parse out the text out of every descendant element, use the ``attr`` paramete
 
 .. code-block:: python
 
-    >>> String(name='connections', css='.profile-overview .member-connections', quant=1, attr='_all_text').parse_html(html)
+    >>> String(name='connections', css='.profile-overview .member-connections', quant=1, attr='_all_text').parse(html)
     {'connections': u'500+ connections'}
 
 
@@ -175,11 +175,11 @@ To parse out the url of the profile picture, use ``Url`` parser instead of ``Str
 
 .. code-block:: python
 
-    >>> Url(name='profile-picture', css='.profile-picture img', quant=1, attr='src').parse_html(html, url=url)
+    >>> Url(name='profile-picture', css='.profile-picture img', quant=1, attr='src').parse(html, url=url)
     {'profile-picture': u'https://media.licdn.com/mpr/mpr/shrink_200_200/p/2/000/1a3/129/3a73f4c.jpg'}
 
 
-When you use ``Url`` parser and pass ``url`` parameter to ``parse_html()`` method,
+When you use ``Url`` parser and pass ``url`` parameter to ``parse()`` method,
 the parser will parse out the absolute url address.
 We have also passed ``attr`` parameter to the parser with which we specified that we want
 to parse the value out of an HTML attribute ``src``.
@@ -194,7 +194,7 @@ use ``Group`` parser to group the data for each job together:
     >>> Group(name='jobs', css='#background-experience .section-item', quant='*', children=[
             String(name='title', css='h4', quant=1),
             String(name='company', css='h5', quant=1, attr='_all_text')
-        ]).parse_html(html)
+        ]).parse(html)
     {'jobs': [
         {'company': u'United States of America', 'title': u'President'},
         {'company': u'US Senate (IL-D)', 'title': u'US Senator'},
