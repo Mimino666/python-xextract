@@ -6,7 +6,7 @@ xextract
 
 **xextract** is an HTML parsing library that is simple enough to write a one-liner, yet powerful enough to be a part bigger projects.
 
-**Table of Contents**
+**Features**
 
 - Simple declarative style of parsers
 - Parsing of HTML and XML documents
@@ -226,19 +226,21 @@ Element
 -------
 
 
-==================
-Argument reference
-==================
+=================
+Parser parameters
+=================
 
 -----------
 css / xpath
 -----------
 
-Use either ``css`` or ``xpath`` argument (but not both) to select from which elements to parse the data.
+**Parsers**: ``Prefix``, ``Group``, ``Element``, ``String``, ``Url``, ``DateTime``
 
-Under the hood, css selectors are translated into equivalent xpath selectors and then compiled for better performance.
+Use either ``css`` or ``xpath`` argument (but not both) to select the elements from which to parse the data.
 
-In hierarchical parsers (``Prefix``, ``Group``), the descendant parsers are always selected relative to the elements matched by the parent parser.
+Under the hood, css selectors are translated into equivalent xpath selectors with *cssselect* library.
+
+For hierarchical parsers (``Prefix``, ``Group``), the descendant parsers are always selected relative to the elements matched by the parent parser.
 
 .. code-block:: python
 
@@ -247,7 +249,10 @@ In hierarchical parsers (``Prefix``, ``Group``), the descendant parsers are alwa
         # this parser is translated into: //*[@id="profile"]/descendant::*[@class="full-name"]
         String(name='name', css='.full-name', quant=1),
         # this parser is translated into: //*[@id="profile"]/*[@class="title"]
-        String(name='title', xpath='*[@class="title"]', quant=1)
+        String(name='title', xpath='*[@class="title"]', quant=1),
+        # this parser is translated into: //*[@class="title"]
+        # because of // (see the xpath definition). Probably not what you want.
+        String(name='title', xpath='//*[@class="title"]', quant=1)
     ])
 
 
@@ -255,20 +260,21 @@ In hierarchical parsers (``Prefix``, ``Group``), the descendant parsers are alwa
 quant
 -----
 
-Number of matched elements is compared to the ``quant`` argument.
-If the number of elements doesn't match the expected quantity, ``ParsingError`` exception is raised.
+**Parsers**: ``Group``, ``Element``, ``String``, ``Url``, ``DateTime``
 
-This argument is very useful to specify expectations about the document structure
-and be notified, when the expectations are not met.
+**Default value**: ``'*'``
+
+Number of elements matched with either css or xpath selector is validated against the ``quant`` parameter.
+If the number of elements doesn't match the expected quantity, ``ParsingError`` exception is raised.
 In practice you can use this and be notified when the crawled website changes its HTML structure.
 
 Syntax for ``quant`` mimics the regular expressions.
 You can either pass them as string, single integer or a tuple of two integers.
 
-Value of ``quant`` also modifies whether the parsing process will return a single value or a list of values.
+Value of ``quant`` also modifies whether the result of parsing will be a single value or a list of values.
 
 +-------------------+-----------------------------------------------+-----------------------------+
-| Value of ``quant``| Meaning                                       | Return from parsing         |
+| Value of ``quant``| Meaning                                       | Result of parsing           |
 +===================+===============================================+=============================+
 | ``'*'`` (default) | Zero or more elements.                        | List of values              |
 +-------------------+-----------------------------------------------+-----------------------------+
@@ -285,5 +291,5 @@ Value of ``quant`` also modifies whether the parsing process will return a singl
 | ``(num1, num2)``  | Number of elements has to be between          | List of values              |
 |                   | ``num1`` and ``num2``, inclusive.             |                             |
 |                   |                                               |                             |
-|                   | You can pass either string or tuple.          |                             |
+|                   | You can pass either a string or tuple.        |                             |
 +-------------------+-----------------------------------------------+-----------------------------+
