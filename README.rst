@@ -15,7 +15,7 @@ Extract structured data from HTML and XML like a boss.
 - Parsing of HTML and XML documents
 - Supports **xpaths** and **css selectors**
 - Built-in self-validation to let you know when the structure of the website has changed
-- Speed - under the hood the library uses lxml library (http://lxml.de/) with compiled xpath selectors
+- Speed - under the hood the library uses `lxml library <http://lxml.de/>`_ with compiled xpath selectors
 
 
 **Table of Contents**
@@ -104,6 +104,7 @@ so include the following code to the top of the file:
     response = requests.get('https://www.linkedin.com/in/barackobama')
     html, url = response.text, response.url
 
+-----
 
 To parse out the name from the Linkedin profile, call:
 
@@ -117,14 +118,21 @@ You can see that the **parsed data are returned in a dictionary**.
 
 Parameters we passed to the parser have the following meaning:
 
-- ``name`` - dictionary key under which to store the parsed data.
-- ``css`` - css selector to the HTML element containing the data.
-- ``quant`` - number of HTML elements we expect to match with the css selector. In this case we expect exactly one element. If the number of elements doesn't match, ``ParsingError`` exception is raised:
+- ``name`` (required) - dictionary key under which to store the parsed data.
+- ``css`` (required) - css selector to the HTML element containing the data.
+- ``quant`` (optional) - number of HTML elements we expect to match with the css selector. In this case we expect exactly one element. If the number of elements doesn't match, ``ParsingError`` exception is raised:
 
     .. code-block:: python
 
         >>> String(name='name', css='.full-name', quant=2).parse(html)
         xextract.selectors.ParsingError: Number of "name" elements, 1, does not match the expected quantity "2".
+
+If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of elements matched, i.e. you can match zero or more elements and no exception is raised. Second, the extracted value will be returned as an (possibly empty) list of values (for more details see `quant`_ reference):
+
+.. code-block:: python
+
+    >>> String(name='name', css='.full-name').parse(html)
+    {'name': [u'Barack Obama']}
 
 -----
 
@@ -132,13 +140,13 @@ In the previous example we could have used xpath instead of css selector:
 
 .. code-block:: python
 
-    >>> String(name='name', xpath='*[@class="full-name"]', quant=1).parse(html)
+    >>> String(name='name', xpath='//*[@class="full-name"]', quant=1).parse(html)
     {'name': u'Barack Obama'}
 
 
 -----
 
-By default, ``String`` parses out the text content of the element. To extract the data from an HTML attribute, use ``attr`` parameter:
+By default, ``String`` extracts the text content of the element. To extract the data from an HTML attribute, use ``attr`` parameter:
 
 .. code-block:: python
 
@@ -162,7 +170,7 @@ We would like to extract the whole text "*500+ connections*".
 By default, ``String`` parser extracts only the text directly from the matched elements, but not their descendants.
 In the above case, if we matched ``.member-connections`` element, by default it would extract only the text "*connections*".
 
-To parse out the text out of every descendant element, use the ``attr`` parameter with the special value *_all_text*:
+To extract the text out of every descendant element, use the ``attr`` parameter with the special value *_all_text*:
 
 .. code-block:: python
 
@@ -238,15 +246,14 @@ css / xpath
 
 **Parsers**: ``Prefix``, ``Group``, ``Element``, ``String``, ``Url``, ``DateTime``
 
-Use either ``css`` or ``xpath`` argument (but not both) to select the elements from which to extract the data.
+Use either ``css`` or ``xpath`` parameter (but not both) to select the elements from which to extract the data.
 
 Under the hood css selectors are translated into equivalent xpath selectors.
 
-The children parsers of ``Prefix`` and ``Group`` parser are always selected relative to the elements matched by the parent parser. For example:
+The elements of children parsers of ``Prefix`` and ``Group`` parsers are always selected relative to the elements matched by the parent parser. For example:
 
 .. code-block:: python
 
-    # for the root xpath don't forget to include '//'
     Prefix(xpath='//*[@id="profile"]', children=[
         # same as: //*[@id="profile"]/descendant::*[@class="full-name"]
         String(name='name', css='.full-name', quant=1),
@@ -254,7 +261,6 @@ The children parsers of ``Prefix`` and ``Group`` parser are always selected rela
         String(name='title', xpath='*[@class="title"]', quant=1),
         # same as: //*[@class="subtitle"]
         # Probably not what you want.
-        # Because of the second '//', the first part is irrelevant.
         String(name='subtitle', xpath='//*[@class="subtitle"]', quant=1)
     ])
 
@@ -272,12 +278,12 @@ If the number of elements doesn't match the expected quantity, ``ParsingError`` 
 In practice you can use this to be notified when the website changes its HTML structure.
 
 Syntax for ``quant`` mimics the regular expressions.
-You can either pass the value as string, single integer or a tuple of two integers.
+You can either pass the value as a string, single integer or tuple of two integers.
 
-Value of ``quant`` also modifies whether the result of parsing will be a single value or a list of values.
+Depending on the value of ``quant``, the extracted data are returned either as a single value or a list of values.
 
 +-------------------+-----------------------------------------------+-----------------------------+
-| Value of ``quant``| Meaning                                       | Result of parsing           |
+| Value of ``quant``| Meaning                                       | Extracted data              |
 +===================+===============================================+=============================+
 | ``'*'`` (default) | Zero or more elements.                        | List of values              |
 +-------------------+-----------------------------------------------+-----------------------------+
