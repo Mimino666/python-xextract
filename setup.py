@@ -16,7 +16,7 @@ with open('LICENSE') as f:
 setup(
     name='xextract',
     version=xextract.__version__,
-    description='Python library for parsing and data extraction from HTML.',
+    description='Extract structured data from HTML and XML like a boss.',
     long_description=readme,
     author='Michal "Mimino" Danilak',
     author_email='michal.danilak@gmail.com',

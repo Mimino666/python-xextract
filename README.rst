@@ -127,7 +127,7 @@ Parameters we passed to the parser have the following meaning:
         >>> String(name='name', css='.full-name', quant=2).parse(html)
         xextract.selectors.ParsingError: Number of "name" elements, 1, does not match the expected quantity "2".
 
-If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of elements matched, i.e. you can match zero or more elements and no exception is raised. Second, the extracted value will be returned as an (possibly empty) list of values (for more details see `quant`_ reference):
+If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of matched elements, i.e. you can match zero or more elements and no exception is raised. Second, the extracted value will be returned as an (possibly empty) list of values (for more details see `quant`_ reference):
 
 .. code-block:: python
 
@@ -189,9 +189,9 @@ To parse out the url of the profile picture, use ``Url`` parser instead of ``Str
 
 
 When you use ``Url`` parser and pass ``url`` parameter to ``parse()`` method,
-the parser will parse out the absolute url address.
-By default, ``Url`` parses the value out of *href* attribute of the matched element.
-If you want to parse the value out of a different attribute (e.g. *src*), pass it as ``attr`` parameter.
+the parser will construct the absolute url address.
+By default, ``Url`` extracts the value out of *href* attribute of the matched element.
+If you want to extract the value out of a different attribute (e.g. *src*), pass it as ``attr`` parameter.
 
 -----
 
