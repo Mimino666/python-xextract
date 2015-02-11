@@ -14,7 +14,7 @@ class XPathExtractor(object):
         self._root = _root
 
     def _get_root(self, body, encoding=None):
-        body = body.strip() or '<html/>'
+        body = body.strip() or self._empty_doc
         if isinstance(body, unicode):
             body = body.encode('utf-8')
             encoding = 'utf-8'
@@ -65,8 +65,10 @@ class XPathExtractor(object):
 class XmlXPathExtractor(XPathExtractor):
     _parser = etree.XMLParser
     _tostring_method = 'xml'
+    _empty_doc = '<?xml version="1.0" encoding="UTF-8"?>'
 
 
 class HtmlXPathExtractor(XPathExtractor):
     _parser = etree.HTMLParser
     _tostring_method = 'html'
+    _empty_doc = '<html/>'
