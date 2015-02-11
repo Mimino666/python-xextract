@@ -4,16 +4,18 @@ xextract
 
 *NOTE*: **xextract** is still under construction.
 
-**xextract** is an HTML parsing library that is simple enough to write a one-liner, yet powerful enough to be a part bigger projects.
+Extract structured data from HTML and XML like a boss.
+
+**xextract** is simple enough to write a one-line parser, yet powerful enough to be a part of bigger projects.
+
 
 **Features**
 
 - Simple declarative style of parsers
 - Parsing of HTML and XML documents
-- Write **xpaths** or **css selectors** to extract the data
+- Supports **xpaths** and **css selectors**
 - Built-in self-validation to let you know when the structure of the website has changed
 - Speed - under the hood the library uses lxml library (http://lxml.de/) with compiled xpath selectors
-- You can optionally define the parsers in external XML files to separate the parsing from other business logic
 
 
 **Table of Contents**
@@ -30,11 +32,11 @@ A little taste of it
 
 .. code-block:: python
 
-  from xextract import Prefix, Group, String, Url
   # fetch the website
   import requests
   response = requests.get('https://www.linkedin.com/in/barackobama')
 
+  from xextract import Prefix, Group, String, Url
   parser = Prefix(css='#profile', children=[
       String(name='name', css='.full-name', quant=1),
       String(name='title', css='.title', quant=1),
@@ -97,7 +99,7 @@ so include the following code to the top of the file:
 
 .. code-block:: python
 
-    from xextract import Prefix, Group, Element, String, Url, DateTime
+    from xextract import *
     import requests
     response = requests.get('https://www.linkedin.com/in/barackobama')
     html, url = response.text, response.url
@@ -158,9 +160,9 @@ To parse out the number of connections, which are stored like this:
 
 We would like to extract the whole text "*500+ connections*".
 By default, ``String`` parser extracts only the text directly from the matched elements, but not their descendants.
-In the above case, if we matched ``.member-connections`` element, by default it would parse out only the text "*connections*".
+In the above case, if we matched ``.member-connections`` element, by default it would extract only the text "*connections*".
 
-To parse out the text out of every descendant element, use the ``attr`` parameter with the special value ``"_all_text"``:
+To parse out the text out of every descendant element, use the ``attr`` parameter with the special value *_all_text*:
 
 .. code-block:: python
 
@@ -180,13 +182,13 @@ To parse out the url of the profile picture, use ``Url`` parser instead of ``Str
 
 When you use ``Url`` parser and pass ``url`` parameter to ``parse()`` method,
 the parser will parse out the absolute url address.
-By default, ``Url`` parses the value out of ``"href"`` attribute of the matched element.
-If you want to parse the value out of a different attribute (e.g. ``"src"``), pass it as ``attr`` parameter.
+By default, ``Url`` parses the value out of *href* attribute of the matched element.
+If you want to parse the value out of a different attribute (e.g. *src*), pass it as ``attr`` parameter.
 
 -----
 
 To parse out the list of jobs and from each job to store the company name and the title,
-use ``Group`` parser to group the data of each job together:
+use ``Group`` parser to group the job data together:
 
 .. code-block:: python
 
@@ -236,23 +238,24 @@ css / xpath
 
 **Parsers**: ``Prefix``, ``Group``, ``Element``, ``String``, ``Url``, ``DateTime``
 
-Use either ``css`` or ``xpath`` argument (but not both) to select the elements from which to parse the data.
+Use either ``css`` or ``xpath`` argument (but not both) to select the elements from which to extract the data.
 
-Under the hood, css selectors are translated into equivalent xpath selectors with *cssselect* library.
+Under the hood css selectors are translated into equivalent xpath selectors.
 
-For hierarchical parsers (``Prefix``, ``Group``), the descendant parsers are always selected relative to the elements matched by the parent parser.
+The children parsers of ``Prefix`` and ``Group`` parser are always selected relative to the elements matched by the parent parser. For example:
 
 .. code-block:: python
 
-    # use // prefix for the root xpath
+    # for the root xpath don't forget to include '//'
     Prefix(xpath='//*[@id="profile"]', children=[
-        # this parser is translated into: //*[@id="profile"]/descendant::*[@class="full-name"]
+        # same as: //*[@id="profile"]/descendant::*[@class="full-name"]
         String(name='name', css='.full-name', quant=1),
-        # this parser is translated into: //*[@id="profile"]/*[@class="title"]
+        # same as: //*[@id="profile"]/*[@class="title"]
         String(name='title', xpath='*[@class="title"]', quant=1),
-        # this parser is translated into: //*[@class="title"]
-        # because of // (see the xpath definition). Probably not what you want.
-        String(name='title', xpath='//*[@class="title"]', quant=1)
+        # same as: //*[@class="subtitle"]
+        # Probably not what you want.
+        # Because of the second '//', the first part is irrelevant.
+        String(name='subtitle', xpath='//*[@class="subtitle"]', quant=1)
     ])
 
 
@@ -266,10 +269,10 @@ quant
 
 Number of elements matched with either css or xpath selector is validated against the ``quant`` parameter.
 If the number of elements doesn't match the expected quantity, ``ParsingError`` exception is raised.
-In practice you can use this and be notified when the crawled website changes its HTML structure.
+In practice you can use this to be notified when the website changes its HTML structure.
 
 Syntax for ``quant`` mimics the regular expressions.
-You can either pass them as string, single integer or a tuple of two integers.
+You can either pass the value as string, single integer or a tuple of two integers.
 
 Value of ``quant`` also modifies whether the result of parsing will be a single value or a list of values.
 
@@ -293,3 +296,25 @@ Value of ``quant`` also modifies whether the result of parsing will be a single 
 |                   |                                               |                             |
 |                   | You can pass either a string or tuple.        |                             |
 +-------------------+-----------------------------------------------+-----------------------------+
+
+Examples:
+
+.. code-block:: python
+
+    >>> String(name='name', css='.name', quant=1).parse(html)
+    {'name': u'Barack Obama'}
+    >>> String(name='name', css='.name', quant='1').parse(html)  # same as above
+    {'name': u'Barack Obama'}
+    >>> String(name='name', css='.name', quant=(1,2)).parse(html)
+    {'name': [u'Barack Obama']}
+    >>> String(name='name', css='.name', quant='1,2').parse(html)  # same as above
+    {'name': [u'Barack Obama']}
+    >>> String(name='middle-name', css='.middle', quant='?').parse(html)
+    {'middle-name': None}
+    >>> String(name='job-titles', css='#background-experience .section-item h4', quant='+').parse(html)
+    {'job-titles': [u'President', u'US Senator', u'State Senator', u'Senior Lecturer in Law']}
+    >>> String(name='friends', css='.friend', quant='*').parse(html)
+    {'friends': []}
+    >>> String(name='friends', css='.friend', quant='+').parse(html)
+    xextract.selectors.ParsingError: Number of "friends" elements, 0, does not match the expected quantity "+".
+
