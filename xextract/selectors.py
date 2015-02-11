@@ -1,3 +1,4 @@
+from datetime import datetime
 import urlparse
 
 from cssselect import GenericTranslator
@@ -43,14 +44,17 @@ class BaseSelector(object):
         return self._parse(extractor, context)
 
     def _parse(self, extractor, context):
-        # compile xpath expression for better performance
-        if self.compiled_xpath is None:
-            self.compiled_xpath = etree.XPath(self.raw_xpath, namespaces=self.namespaces)
         nodes = extractor.select(self.compiled_xpath)
         return self._process_nodes(nodes, context)
 
     def _process_nodes(self, nodes, context):
         raise NotImplementedError
+
+    @property
+    def compiled_xpath(self):
+        if not hasattr(self, '_compiled_xpath'):
+            self._compiled_xpath = etree.XPath(self.raw_xpath, namespaces=self.namespaces)
+        return self._compiled_xpath
 
 
 class Prefix(BaseSelector):
@@ -126,7 +130,11 @@ class String(BaseNamedSelector):
         for node in nodes:
             value = ''.join(node.select(self.attr).extract())
             values.append(value)
+        values = self._process_values(values, context)
         return {self.name: self._flatten_values(values)}
+
+    def _process_values(self, values, context):
+        return values
 
 
 class Url(String):
@@ -134,12 +142,17 @@ class Url(String):
         kwargs.setdefault('attr', 'href')
         super(Url, self).__init__(**kwargs)
 
-    def _process_nodes(self, nodes, context):
-        values = []
-        for node in nodes:
-            value = ''.join(node.select(self.attr).extract())
-            url = context.get('url')
-            if url:
-                value = urlparse.urljoin(url, value)
-            values.append(value)
-        return {self.name: self._flatten_values(values)}
+    def _process_values(self, values, context):
+        url = context.get('url')
+        if url:
+            values = map(lambda v: urlparse.urljoin(url, v), values)
+        return values
+
+
+class DateTime(String):
+    def __init__(self, format, **kwargs):
+        self.format = format
+        super(DateTime, self).__init__(**kwargs)
+
+    def _process_values(self, values, context):
+        return map(lambda v: datetime.strptime(v, self.format), values)
