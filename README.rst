@@ -36,8 +36,9 @@ A little taste of it
   import requests
   response = requests.get('https://www.linkedin.com/in/barackobama')
 
+  # parse like a boss
   from xextract import Prefix, Group, String, Url
-  parser = Prefix(css='#profile', children=[
+  Prefix(css='#profile', children=[
       String(name='name', css='.full-name', quant=1),
       String(name='title', css='.title', quant=1),
       Group(name='jobs', css='#background-experience .section-item', quant='*', children=[
@@ -46,8 +47,7 @@ A little taste of it
           Url(name='company_url', css='h5 a', quant='?'),
           String(name='description', css='.description', quant='?')
       ])
-  ])
-  parser.parse(response.text, url=response.url)
+  ]).parse(response.text, url=response.url)
 
 
 Output:
@@ -127,7 +127,7 @@ Parameters we passed to the parser have the following meaning:
         >>> String(name='name', css='.full-name', quant=2).parse(html)
         xextract.selectors.ParsingError: Number of "name" elements, 1, does not match the expected quantity "2".
 
-If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of matched elements, i.e. you can match zero or more elements and no exception is raised. Second, the extracted value will be returned as an (possibly empty) list of values (for more details see `quant`_ reference):
+If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of matched elements, i.e. you can match zero or more elements and no exception is raised. Second, the extracted data will be returned as an (possibly empty) list of values (for more details see `quant`_ reference):
 
 .. code-block:: python
 
@@ -150,13 +150,13 @@ By default, ``String`` extracts the text content of the element. To extract the 
 
 .. code-block:: python
 
-    >>> String(name='demographics-css-class', css='#demographics', quant=1, attr='class').parse(html)
-    {'demographics-css-class': u'demographic-info adr editable-item'}
+    >>> String(name='css-class', css='span', quant=1, attr='class').parse('<span class="hello"></span>')
+    {'css-class': u'hello'}
 
 
 -----
 
-To extract the whole text "*500+ connections*" from the following structure:
+To extract the whole text "*500+ connections*" from the following HTML structure:
 
 .. code-block:: html
 
@@ -168,7 +168,7 @@ To extract the whole text "*500+ connections*" from the following structure:
 By default, ``String`` parser extracts only the text directly from the matched elements, but not their descendants.
 In the above case, if we matched ``.member-connections`` element, by default it would extract only the text "*connections*".
 
-To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *_all_text*:
+To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *'_all_text'*:
 
 .. code-block:: python
 
@@ -187,7 +187,7 @@ To extract the url of the profile picture, use ``Url`` parser instead of ``Strin
 
 
 When you use ``Url`` parser and pass ``url`` parameter to ``parse()`` method,
-the parser will construct the absolute url address.
+the parser will extract the absolute url address.
 By default, ``Url`` extracts the value out of *href* attribute of the matched element.
 If you want to extract the value out of a different attribute (e.g. *src*), pass it as ``attr`` parameter.
 
@@ -209,8 +209,7 @@ use ``Group`` parser to group the job data together:
         {'company': u'University of Chicago Law School', 'title': u'Senior Lecturer in Law'}]}
 
 
-In this case the ``Group`` parser's css selector "*#background-experience .section-item*" matched
-four elements, each of those containing a single ``h4`` and ``h5`` elements.
+In this case the ``Group`` matched four elements, each of those containing a single ``h4`` and ``h5`` elements.
 
 
 ================
@@ -223,7 +222,7 @@ String
 
 **Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (default ``'*'``), `attr`_ (default ``'_text'``), `namespaces`_
 
-Returns the raw string value extracted from the matched element.
+Returns the raw string extracted from the matched element.
 Returned value is always unicode.
 
 Use ``attr`` parameter to extract the data from an HTML attribute.
@@ -247,7 +246,12 @@ Url
 
 **Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (default ``'*'``), `attr`_ (default ``'href'``), `namespaces`_
 
+Returns the raw string extracted from the matched element.
+Returned value is always unicode.
+
 If you pass ``url`` parameter to ``parse()`` method, the absolute urls will be extracted and returned.
+
+In contrast with the ``String`` parser, ``Url`` parser by default extracts the data from ``href`` attribute.
 
 Example:
 
@@ -255,10 +259,10 @@ Example:
 
     >>> html = '<a href="/test">Link</a>'
     >>> Url(name='url', css='a', quant=1).parse(html)
-    {'url': u'/test'}  # without url passed to parse(), Url behaves just like String parser
+    {'url': u'/test'}  # without url passed, Url parser behaves just like the String parser
 
     >>> Url(name='url', css='a', quant=1).parse(html, url='http://github.com/Mimino666')
-    {'url': u'http://github.com/test'}  # told ya! Absolute url address
+    {'url': u'http://github.com/test'}  # absolute url address. Told ya!
 
 
 --------
@@ -304,7 +308,7 @@ name
 
 Specifies the dictionary key under which to store the extracted data.
 
-If multiple parsers under ``Group`` or ``Prefix`` parser have the same ``name``, the behavior is undefined.
+If multiple parsers under the ``Group`` or ``Prefix`` parser have the same ``name``, the behavior is undefined.
 
 
 -----------
@@ -317,7 +321,7 @@ Use either ``css`` or ``xpath`` parameter (but not both) to select the elements 
 
 Under the hood css selectors are translated into equivalent xpath selectors.
 
-The elements of children parsers of ``Prefix`` and ``Group`` parsers are always selected relative to the elements matched by the parent parser. For example:
+For the children of the ``Prefix`` or ``Group`` parser note, that the elements are selected relative to the elements matched by the parent parser. For example:
 
 .. code-block:: python
 
@@ -340,9 +344,9 @@ quant
 
 **Default value**: ``'*'``
 
-Number of elements matched with either css or xpath selector is validated against the ``quant`` parameter.
+Number of matched elements is validated against the ``quant`` parameter.
 If the number of elements doesn't match the expected quantity, ``ParsingError`` exception is raised.
-In practice you can use this to be notified when the website changes its HTML structure.
+In practice you can use this to be notified when the website changed its HTML structure.
 
 Syntax for ``quant`` mimics the regular expressions.
 You can either pass the value as a string, single integer or tuple of two integers.
@@ -431,7 +435,7 @@ For the following HTML structure:
     <span class="name">Barack <strong>Obama</strong> III.</span>
     <a href="/test">Link</a>
 
-Here are the different scenarios:
+He are a few examples:
 
 .. code-block:: python
 
