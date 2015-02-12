@@ -221,18 +221,62 @@ Parser reference
 String
 ------
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_, `attr`_, `namespaces`_
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (default ``'*'``), `attr`_ (default ``'_text'``), `namespaces`_
 
-Extract the string value
+Returns the raw string value extracted from the matched element.
+Returned value is always unicode.
+
+Use ``attr`` parameter to extract the data from an HTML attribute.
+By default, ``String`` extracts the text content directly from the matched element, but not its descendants.
+To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *_all_text*:
+
+Example:
+
+.. code-block:: python
+
+    >>> String(name='text', css='span', quant=1).parse('<span>Hello <b>world!</b></span>')
+    {'text': u'Hello '}
+
+    >>> String(name='text', css='span', quant=1, attr='_all_text').parse('<span>Hello <b>world!</b></span>')
+    {'text': u'Hello world!'}
+
 
 ---
 Url
 ---
 
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (default ``'*'``), `attr`_ (default ``'href'``), `namespaces`_
+
+If you pass ``url`` parameter to ``parse()`` method, the absolute urls will be extracted and returned.
+
+Example:
+
+.. code-block:: python
+
+    >>> html = '<a href="/test">Link</a>'
+    >>> Url(name='url', css='a', quant=1).parse(html)
+    {'url': u'/test'}  # without url passed to parse(), Url behaves just like String parser
+
+    >>> Url(name='url', css='a', quant=1).parse(html, url='http://github.com/Mimino666')
+    {'url': u'http://github.com/test'}  # told ya! Absolute url address
+
 
 --------
 DateTime
 --------
+
+**Parameters**: `name`_ (required), `css / xpath`_ (required), ``format`` (required), `quant`_ (default ``'*'``), `attr`_ (default ``'_text'``), `namespaces`_
+
+Returns the ``datetime`` object constructed out of the parsed data by calling: ``datetime.strptime(value, format)``.
+
+Use ``format`` parameter to specify how to parse the ``datetime`` object. Syntax is described in the `official documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
+
+Example:
+
+.. code-block:: python
+
+    >>> DateTime(name='christmas', css='span', quant=1, format='%d.%m.%Y').parse('<span>24.12.2015</span>')
+    {'christmas': datetime.datetime(2015, 12, 24, 0, 0)}
 
 
 -------
@@ -258,7 +302,9 @@ name
 
 **Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_
 
-Key in the dictionary under which to store the extracted data for the parser.
+Specifies the dictionary key under which to store the extracted data.
+
+If multiple parsers under ``Group`` or ``Prefix`` parser have the same ``name``, the behavior is undefined.
 
 
 -----------
