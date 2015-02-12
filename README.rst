@@ -6,14 +6,14 @@ xextract
 
 Extract structured data from HTML and XML like a boss.
 
-**xextract** is simple enough to write a one-line parser, yet powerful enough to be a part of bigger projects.
+**xextract** is simple enough to write a one-line parser, yet powerful enough to be a part of a big project.
 
 
 **Features**
 
 - Simple declarative style of parsers
 - Parsing of HTML and XML documents
-- Supports **xpaths** and **css selectors**
+- Supports **xpath** and **css selectors**
 - Built-in self-validation to let you know when the structure of the website has changed
 - Speed - under the hood the library uses `lxml library <http://lxml.de/>`_ with compiled xpath selectors
 
@@ -106,7 +106,7 @@ so include the following code to the top of the file:
 
 -----
 
-To parse out the name from the Linkedin profile, call:
+To extract the name from the Linkedin profile, call:
 
 .. code-block:: python
 
@@ -132,7 +132,7 @@ If you don't pass ``quant`` parameter, two things will happen. First, there will
 .. code-block:: python
 
     >>> String(name='name', css='.full-name').parse(html)
-    {'name': [u'Barack Obama']}
+    {'name': [u'Barack Obama']}  # note that the extracted data are in the list
 
 -----
 
@@ -156,7 +156,7 @@ By default, ``String`` extracts the text content of the element. To extract the 
 
 -----
 
-To parse out the number of connections, which are stored like this:
+To extract the whole text "*500+ connections*" from the following structure:
 
 .. code-block:: html
 
@@ -165,12 +165,10 @@ To parse out the number of connections, which are stored like this:
         connections
     </div>
 
-
-We would like to extract the whole text "*500+ connections*".
 By default, ``String`` parser extracts only the text directly from the matched elements, but not their descendants.
 In the above case, if we matched ``.member-connections`` element, by default it would extract only the text "*connections*".
 
-To extract the text out of every descendant element, use the ``attr`` parameter with the special value *_all_text*:
+To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *_all_text*:
 
 .. code-block:: python
 
@@ -180,7 +178,7 @@ To extract the text out of every descendant element, use the ``attr`` parameter 
 
 -----
 
-To parse out the url of the profile picture, use ``Url`` parser instead of ``String``:
+To extract the url of the profile picture, use ``Url`` parser instead of ``String``:
 
 .. code-block:: python
 
@@ -195,7 +193,7 @@ If you want to extract the value out of a different attribute (e.g. *src*), pass
 
 -----
 
-To parse out the list of jobs and from each job to store the company name and the title,
+To extract the list of jobs and from each job to store the company name and the title,
 use ``Group`` parser to group the job data together:
 
 .. code-block:: python
@@ -223,7 +221,7 @@ Parser reference
 String
 ------
 
-**Parameters**: `name`_, `css / xpath`_, `quant`_, `attr`_, `namespaces`_
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_, `attr`_, `namespaces`_
 
 Extract the string value
 
@@ -257,6 +255,11 @@ Parser parameters
 ----
 name
 ----
+
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_
+
+Key in the dictionary under which to store the extracted data for the parser.
+
 
 -----------
 css / xpath
