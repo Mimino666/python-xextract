@@ -127,7 +127,7 @@ Parameters we passed to the parser have the following meaning:
         >>> String(name='name', css='.full-name', quant=2).parse(html)
         xextract.selectors.ParsingError: Number of "name" elements, 1, does not match the expected quantity "2".
 
-If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of matched elements, i.e. you can match zero or more elements and no exception is raised. Second, the extracted data will be returned as an (possibly empty) list of values (for more details see `quant`_ reference):
+If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of matched elements, i.e. you can match zero or more elements and no exception is raised. Second, the extracted data will be returned as a (possibly empty) list of values (for more details see `quant`_ reference):
 
 .. code-block:: python
 
@@ -193,12 +193,12 @@ If you want to extract the value out of a different attribute (e.g. *src*), pass
 
 -----
 
-To extract the list of jobs and from each job to store the company name and the title,
+To extract a list of jobs and from each job to store the company name and the title,
 use ``Group`` parser to group the job data together:
 
 .. code-block:: python
 
-    >>> Group(name='jobs', css='#background-experience .section-item', quant='*', children=[
+    >>> Group(name='jobs', css='#background-experience .section-item', quant='+', children=[
     ...     String(name='title', css='h4', quant=1),
     ...     String(name='company', css='h5', quant=1, attr='_all_text')
     ... ]).parse(html)
@@ -226,8 +226,9 @@ Returns the raw string extracted from the matched element.
 Returned value is always unicode.
 
 Use ``attr`` parameter to extract the data from an HTML attribute.
+
 By default, ``String`` extracts the text content directly from the matched element, but not its descendants.
-To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *_all_text*:
+To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *'_all_text'*:
 
 Example:
 
@@ -251,8 +252,6 @@ Returned value is always unicode.
 
 If you pass ``url`` parameter to ``parse()`` method, the absolute urls will be extracted and returned.
 
-In contrast with the ``String`` parser, ``Url`` parser by default extracts the data from ``href`` attribute.
-
 Example:
 
 .. code-block:: python
@@ -271,9 +270,9 @@ DateTime
 
 **Parameters**: `name`_ (required), `css / xpath`_ (required), ``format`` (required), `quant`_ (default ``'*'``), `attr`_ (default ``'_text'``), `namespaces`_
 
-Returns the ``datetime`` object constructed out of the parsed data by calling: ``datetime.strptime(value, format)``.
+Returns the ``datetime`` object constructed out of the parsed data by: ``datetime.strptime(value, format)``.
 
-Use ``format`` parameter to specify how to parse the ``datetime`` object. Syntax is described in the `official documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
+Use ``format`` parameter to specify how to parse the ``datetime`` object. Syntax is described in the `Python documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
 
 Example:
 
@@ -287,9 +286,43 @@ Example:
 Element
 -------
 
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (default ``'*'``), `namespaces`_
+
+Returns the instance of ``lxml.etree._Element``.
+
+This parser doesn't extract any value, but returns the matched element itself.
+
+Example:
+
+.. code-block:: python
+
+    >>> Element(name='span', css='span', quant=1).parse('<span>Hello</span>')
+    {'span': <Element span at 0x2ac2990>}
+
+
 -----
 Group
 -----
+
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `children`_ (required), `quant`_ (default ``'*'``), `namespaces`_
+
+Returns the dictionary of the data extracted by the parsers listed in ``children`` parameter.
+
+Typical use case for this parser is when you want to parse a list of user profiles and each profile further contains additional fields like name, address, etc. Use ``Group`` parser to group the fields of each profile together into separate dictionary.
+
+Example:
+
+.. code-block:: python
+
+    >>> html = '<ul><li id="id1">Hello</li> <li id="id2">world!</li></ul>'
+    >>> Group(name='data', css='li', quant=2, children=[
+    ...     String(name='id', xpath='self::*', quant=1, attr='id'),
+    ...     String(name='text', xpath='self::*', quant=1)
+    ... ]).parse(html)
+    {'data': [
+        {'text': u'Hello', 'id': u'id1'},
+        {'text': u'world!', 'id': u'id2'}]}
+
 
 ------
 Prefix
@@ -456,6 +489,13 @@ He are a few examples:
 
     >>> String(name='id', css='a', quant='1', attr='id').parse(html)  # non-existent attributes return empty string
     {'id': u''}
+
+
+--------
+children
+--------
+
+**Parsers**: `Group`_, `Prefix`_
 
 
 ----------
