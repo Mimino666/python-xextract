@@ -106,7 +106,7 @@ so include the following code to the top of the file:
 
 -----
 
-To extract the name from the Linkedin profile, call:
+To extract the name from a Linkedin profile, call:
 
 .. code-block:: python
 
@@ -120,7 +120,7 @@ Parameters we passed to the parser have the following meaning:
 
 - ``name`` (required) - dictionary key under which to store the parsed data.
 - ``css`` (required) - css selector to the HTML element containing the data.
-- ``quant`` (optional) - number of HTML elements we expect to match with the css selector. In this case we expect exactly one element. If the number of elements doesn't match, ``ParsingError`` exception is raised:
+- ``quant`` (optional) - number of HTML elements we expect to match with the css selector. In the above case we expect exactly one element. If the number of elements doesn't match, ``ParsingError`` exception is raised:
 
     .. code-block:: python
 
@@ -165,14 +165,18 @@ To extract the whole text "*500+ connections*" from the following HTML structure
         connections
     </div>
 
-By default, ``String`` parser extracts only the text directly from the matched elements, but not their descendants.
-In the above case, if we matched ``.member-connections`` element, by default it would extract only the text "*connections*".
+By default, ``String`` parser extracts only the text directly from the matched elements, but not their descendants:
+
+.. code-block:: python
+
+    >>> String(name='connections', css='.member-connections', quant=1).parse(html)
+    {'connections': u' connections'}
 
 To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *'_all_text'*:
 
 .. code-block:: python
 
-    >>> String(name='connections', css='.profile-overview .member-connections', quant=1, attr='_all_text').parse(html)
+    >>> String(name='connections', css='.member-connections', quant=1, attr='_all_text').parse(html)
     {'connections': u'500+ connections'}
 
 
