@@ -47,7 +47,11 @@ class BaseSelector(object):
 
     def _parse(self, extractor, context):
         nodes = extractor.select(self.compiled_xpath)
+        self._check_nodes(nodes)
         return self._process_nodes(nodes, context)
+
+    def _check_nodes(self, nodes):
+        pass
 
     def _process_nodes(self, nodes, context):
         raise NotImplementedError
@@ -77,7 +81,7 @@ class BaseNamedSelector(BaseSelector):
         self.quantity = Quantity(quant)
         super(BaseNamedSelector, self).__init__(**kwargs)
 
-    def _check_quantity(self, nodes):
+    def _check_nodes(self, nodes):
         num_nodes = len(nodes)
         # check the number of nodes
         if not self.quantity.check_quantity(num_nodes):
@@ -99,7 +103,6 @@ class Group(BaseNamedSelector):
         super(Group, self).__init__(**kwargs)
 
     def _process_nodes(self, nodes, context):
-        self._check_quantity(nodes)
         values = []
         for node in nodes:
             child_parsed_data = {}
@@ -111,7 +114,6 @@ class Group(BaseNamedSelector):
 
 class Element(BaseNamedSelector):
     def _process_nodes(self, nodes, context):
-        self._check_quantity(nodes)
         values = [node._root for node in nodes]
         return {self.name: self._flatten_values(values)}
 
@@ -127,10 +129,9 @@ class String(BaseNamedSelector):
         super(String, self).__init__(**kwargs)
 
     def _process_nodes(self, nodes, context):
-        self._check_quantity(nodes)
         values = []
         for node in nodes:
-            value = ''.join(node.select(self.attr).extract())
+            value = u''.join(node.select(self.attr).extract())
             values.append(value)
         values = self._process_values(values, context)
         return {self.name: self._flatten_values(values)}
