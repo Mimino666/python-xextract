@@ -147,7 +147,7 @@ class Url(String):
     def _process_values(self, values, context):
         url = context.get('url')
         if url:
-            values = map(lambda v: urlparse.urljoin(url, v), values)
+            values = [urlparse.urljoin(url, v) for v in values]
         return values
 
 
@@ -157,4 +157,4 @@ class DateTime(String):
         super(DateTime, self).__init__(**kwargs)
 
     def _process_values(self, values, context):
-        return map(lambda v: datetime.strptime(v, self.format), values)
+        return [datetime.strptime(v, self.format) for v in values]
