@@ -6,7 +6,7 @@ xextract
 
 Extract structured data from HTML and XML like a boss.
 
-**xextract** is simple enough to write a one-line parser, yet powerful enough to be a part of a big project.
+**xextract** is simple enough for writing a one-line parser, yet powerful enough to be a part of a big project.
 
 
 **Features**
@@ -197,7 +197,7 @@ If you want to extract the value out of a different attribute (e.g. *src*), pass
 
 -----
 
-To extract a list of jobs and from each job to store the company name and the title,
+To extract the list of jobs and from each job to store the company name and the job title,
 use ``Group`` parser to group the job data together:
 
 .. code-block:: python
@@ -224,14 +224,14 @@ Parser reference
 String
 ------
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (default ``'*'``), `attr`_ (default ``'_text'``), `namespaces`_
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'_text'``), `namespaces`_ (optional)
 
 Returns the raw string extracted from the matched element.
 Returned value is always unicode.
 
 Use ``attr`` parameter to extract the data from an HTML attribute.
 
-By default, ``String`` extracts the text content directly from the matched element, but not its descendants.
+By default, ``String`` extracts the text content of the matched element, but not its descendants.
 To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *'_all_text'*:
 
 Example:
@@ -249,12 +249,12 @@ Example:
 Url
 ---
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (default ``'*'``), `attr`_ (default ``'href'``), `namespaces`_
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'href'``), `namespaces`_ (optional)
 
-Returns the raw string extracted from the matched element.
-Returned value is always unicode.
+Behaves like ``String`` parser, but with two exceptions:
 
-If you pass ``url`` parameter to ``parse()`` method, the absolute urls will be extracted and returned.
+* default value for ``attr`` parameter is ``'href'``
+* if you pass ``url`` parameter to ``parse()`` method, the absolute urls will be extracted and returned
 
 Example:
 
@@ -272,9 +272,9 @@ Example:
 DateTime
 --------
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), ``format`` (required), `quant`_ (default ``'*'``), `attr`_ (default ``'_text'``), `namespaces`_
+**Parameters**: `name`_ (required), `css / xpath`_ (required), ``format`` (required), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'_text'``), `namespaces`_ (optional)
 
-Returns the ``datetime`` object constructed out of the parsed data by: ``datetime.strptime(value, format)``.
+Returns the ``datetime`` object constructed out of the parsed data with: ``datetime.strptime(value, format)``.
 
 Use ``format`` parameter to specify how to parse the ``datetime`` object. Syntax is described in the `Python documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
 
@@ -290,7 +290,7 @@ Example:
 Element
 -------
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (default ``'*'``), `namespaces`_
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (optional, default ``'*'``), `namespaces`_ (optional)
 
 Returns the instance of ``lxml.etree._Element``.
 
@@ -308,11 +308,11 @@ Example:
 Group
 -----
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `children`_ (required), `quant`_ (default ``'*'``), `namespaces`_
+**Parameters**: `name`_ (required), `css / xpath`_ (required), `children`_ (required), `quant`_ (optional, default ``'*'``), `namespaces`_ (optional)
 
-Returns the dictionary of the data extracted by the parsers listed in ``children`` parameter.
+Returns the dictionary containing the data extracted by the parsers listed in ``children`` parameter.
 
-Typical use case for this parser is when you want to parse a list of user profiles and each profile further contains additional fields like name, address, etc. Use ``Group`` parser to group the fields of each profile together into separate dictionary.
+Typical use case for this parser is when you want to parse a list of user profiles and each profile further contains additional fields like name, address, etc. Use ``Group`` parser to group the fields of each profile together.
 
 Example:
 
@@ -358,17 +358,16 @@ Use either ``css`` or ``xpath`` parameter (but not both) to select the elements 
 
 Under the hood css selectors are translated into equivalent xpath selectors.
 
-For the children of the ``Prefix`` or ``Group`` parser note, that the elements are selected relative to the elements matched by the parent parser. For example:
+For the children of the ``Prefix`` or ``Group`` parsers the elements are selected relative to the elements matched by the parent parser. For example:
 
 .. code-block:: python
 
     Prefix(xpath='//*[@id="profile"]', children=[
-        # same as: //*[@id="profile"]/descendant::*[@class="full-name"]
+        # equivalent to: //*[@id="profile"]/descendant-or-self::*[@class="full-name"]
         String(name='name', css='.full-name', quant=1),
-        # same as: //*[@id="profile"]/*[@class="title"]
+        # equivalent to: //*[@id="profile"]/*[@class="title"]
         String(name='title', xpath='*[@class="title"]', quant=1),
-        # same as: //*[@class="subtitle"]
-        # Probably not what you want.
+        # equivalent to: //*[@class="subtitle"]
         String(name='subtitle', xpath='//*[@class="subtitle"]', quant=1)
     ])
 
