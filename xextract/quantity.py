@@ -33,7 +33,7 @@ class Quantity(object):
         self.raw_quantity = quantity
         self.quantity_type = self._parse_quantity(quantity)
         if self.quantity_type == Q_INVALID:
-            raise ValueError('Invalid quantity: "%s"' % quantity)
+            raise ValueError('Invalid quantity: "%s"' % repr(quantity))
 
     def check_quantity(self, n):
         if not isinstance(n, six.integer_types):
@@ -68,6 +68,9 @@ class Quantity(object):
             else:
                 return Q_INVALID
 
+        if not isinstance(quantity, six.string_types):
+            return Q_INVALID
+
         match = self._quant_re.match(quantity)
         if not match:
             return Q_INVALID
@@ -95,5 +98,6 @@ class Quantity(object):
 
     @property
     def is_single(self):
+        '''True, if the quantity represents a single element.'''
         return (self.quantity_type == Q_QUES or
             (self.quantity_type == Q_1D and self.num <= 1))

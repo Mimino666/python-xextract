@@ -16,7 +16,7 @@ class TestQuantity(unittest.TestCase):
         bad = ['', None, ' * * ', '+*', '  ', '1 2', '1,2,3', '+2', '-2', '3,2', 1.0,
                 -1, (3,2), (-1,5)]
         for b in bad:
-            self.assertRaises(Exception, Quantity, b)
+            self.assertRaises(ValueError, Quantity, b)
 
     def test_err(self):
         q = Quantity('*')
