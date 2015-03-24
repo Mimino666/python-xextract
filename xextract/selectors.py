@@ -40,10 +40,13 @@ class BaseSelector(object):
             extractor = XmlXPathExtractor(body)
         else:
             extractor = HtmlXPathExtractor(body)
-        context = {}
-        if url:
-            context['url'] = url
-        return self._parse(extractor, context)
+        return self._parse(extractor, {'url': url})
+
+    def parse_html(self, body, url=None):
+        return self._parse(HtmlXPathExtractor(body), {'url': url})
+
+    def parse_xml(self, body, url=None):
+        return self._parse(XmlXPathExtractor(body), {'url': url})
 
     def _parse(self, extractor, context):
         nodes = extractor.select(self.compiled_xpath)
