@@ -127,6 +127,8 @@ class String(BaseNamedSelector):
             self.attr = 'text()'
         elif attr == '_all_text':
             self.attr = 'descendant-or-self::*/text()'
+        elif attr == '_name':
+            self.attr = 'name()'
         else:
             self.attr = '@' + attr
         super(String, self).__init__(**kwargs)
