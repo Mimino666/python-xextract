@@ -14,7 +14,8 @@ class TestBaseSelector(unittest.TestCase):
 
     def test_init(self):
         # xpath / css missing
-        self.assertRaises(SelectorError, self.selector_class, **self.selector_kwargs)
+        selector = self.selector_class(**self.selector_kwargs)
+        self.assertEqual(selector.raw_xpath, 'self::*')
         # both xpath / css specified
         self.assertRaises(SelectorError, self.selector_class, css='a', xpath='//a', **self.selector_kwargs)
         # css specified

@@ -18,13 +18,15 @@ class ParsingError(Exception):
 
 class BaseSelector(object):
     def __init__(self, css=None, xpath=None, namespaces=None):
-        if (xpath is None) == (css is None):
-            raise SelectorError('Exactly one of "xpath" or "css" attributes must be specified.')
+        if xpath and css:
+            raise SelectorError('At most one of "xpath" or "css" attributes can be specified.')
 
-        if xpath is not None:
+        if xpath:
             self.raw_xpath = xpath
-        else:
+        elif css:
             self.raw_xpath = GenericTranslator().css_to_xpath(css)
+        else:
+            self.raw_xpath = 'self::*'
         self.namespaces = namespaces
         self._propagate_namespaces()
 
