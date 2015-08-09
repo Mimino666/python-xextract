@@ -52,10 +52,10 @@ class BaseSelector(object):
 
     def _parse(self, extractor, context):
         nodes = extractor.select(self.compiled_xpath)
-        self._check_nodes(nodes)
+        self._validate_nodes(nodes)
         return self._process_nodes(nodes, context)
 
-    def _check_nodes(self, nodes):
+    def _validate_nodes(self, nodes):
         pass
 
     def _process_nodes(self, nodes, context):
@@ -86,7 +86,7 @@ class BaseNamedSelector(BaseSelector):
         self.quantity = Quantity(quant)
         super(BaseNamedSelector, self).__init__(**kwargs)
 
-    def _check_nodes(self, nodes):
+    def _validate_nodes(self, nodes):
         num_nodes = len(nodes)
         # check the number of nodes
         if not self.quantity.check_quantity(num_nodes):
