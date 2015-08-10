@@ -17,7 +17,7 @@ class ParsingError(Exception):
 
 
 class BaseSelector(object):
-    def __init__(self, css=None, xpath=None, namespaces=None):
+    def __init__(self, css=None, xpath=None, namespaces=None, children=None):
         if xpath and css:
             raise SelectorError('At most one of "xpath" or "css" attributes can be specified.')
 
@@ -28,10 +28,11 @@ class BaseSelector(object):
         else:
             self.raw_xpath = 'self::*'
         self.namespaces = namespaces
+        self.children = children
         self._propagate_namespaces()
 
     def _propagate_namespaces(self):
-        if self.namespaces and hasattr(self, 'children'):
+        if self.namespaces and self.children:
             for child in self.children:
                 if not child.namespaces:
                     child.namespaces = self.namespaces
@@ -51,8 +52,10 @@ class BaseSelector(object):
         return self._parse(XmlXPathExtractor(body), {'url': url})
 
     def _parse(self, extractor, context):
+        # select the nodes based on the xpath/css selector
         nodes = extractor.select(self.compiled_xpath)
         self._validate_nodes(nodes)
+        # parse out the values out of the nodes
         return self._process_nodes(nodes, context)
 
     def _validate_nodes(self, nodes):
@@ -69,10 +72,6 @@ class BaseSelector(object):
 
 
 class Prefix(BaseSelector):
-    def __init__(self, children, **kwargs):
-        self.children = children
-        super(Prefix, self).__init__(**kwargs)
-
     def _process_nodes(self, nodes, context):
         parsed_data = {}
         for child in self.children:
@@ -82,9 +81,9 @@ class Prefix(BaseSelector):
 
 class BaseNamedSelector(BaseSelector):
     def __init__(self, name, quant='*', **kwargs):
+        super(BaseNamedSelector, self).__init__(**kwargs)
         self.name = name
         self.quantity = Quantity(quant)
-        super(BaseNamedSelector, self).__init__(**kwargs)
 
     def _validate_nodes(self, nodes):
         num_nodes = len(nodes)
@@ -103,10 +102,6 @@ class BaseNamedSelector(BaseSelector):
 
 
 class Group(BaseNamedSelector):
-    def __init__(self, children, **kwargs):
-        self.children = children
-        super(Group, self).__init__(**kwargs)
-
     def _process_nodes(self, nodes, context):
         values = []
         for node in nodes:
@@ -125,6 +120,7 @@ class Element(BaseNamedSelector):
 
 class String(BaseNamedSelector):
     def __init__(self, attr='_text', **kwargs):
+        super(String, self).__init__(**kwargs)
         if attr == '_text':
             self.attr = 'text()'
         elif attr == '_all_text':
@@ -133,7 +129,6 @@ class String(BaseNamedSelector):
             self.attr = 'name()'
         else:
             self.attr = '@' + attr
-        super(String, self).__init__(**kwargs)
 
     def _process_nodes(self, nodes, context):
         values = []
@@ -161,8 +156,8 @@ class Url(String):
 
 class DateTime(String):
     def __init__(self, format, **kwargs):
-        self.format = format
         super(DateTime, self).__init__(**kwargs)
+        self.format = format
 
     def _process_values(self, values, context):
         return [datetime.strptime(v, self.format) for v in values]
