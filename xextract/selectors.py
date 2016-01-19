@@ -4,7 +4,7 @@ import urlparse
 from cssselect import GenericTranslator
 from lxml import etree
 
-from .extractors import HtmlXPathExtractor, XmlXPathExtractor
+from .extractors import XPathExtractor, HtmlXPathExtractor, XmlXPathExtractor
 from .quantity import Quantity
 
 
@@ -39,10 +39,13 @@ class BaseSelector(object):
                     child._propagate_namespaces()
 
     def parse(self, body, url=None):
-        if '<?xml' in body[:128]:
-            extractor = XmlXPathExtractor(body)
+        if isinstance(body, XPathExtractor):
+            extractor = body
         else:
-            extractor = HtmlXPathExtractor(body)
+            if '<?xml' in body[:128]:
+                extractor = XmlXPathExtractor(body)
+            else:
+                extractor = HtmlXPathExtractor(body)
         return self._parse(extractor, {'url': url})
 
     def parse_html(self, body, url=None):
