@@ -4,9 +4,6 @@ except ImportError:
     from distutils.core import setup
 
 
-import xextract
-
-
 with open('README.rst') as f:
     readme = f.read()
 with open('LICENSE') as f:
@@ -15,7 +12,7 @@ with open('LICENSE') as f:
 
 setup(
     name='xextract',
-    version=xextract.__version__,
+    version='0.0.7',
     description='Extract structured data from HTML and XML like a boss.',
     long_description=readme,
     author='Michal "Mimino" Danilak',
