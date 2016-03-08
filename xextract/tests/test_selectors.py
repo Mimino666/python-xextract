@@ -8,6 +8,22 @@ from xextract.selectors import (SelectorError, ParsingError, BaseSelector,
     BaseNamedSelector, Prefix, Group, Element, String, Url, DateTime)
 
 
+class TestBuild(unittest.TestCase):
+    def test_build(self):
+        # missing children for Group / Prefix parsers
+        self.assertRaisesRegexp(SelectorError, r'You must specify "children" for Prefix parser', Prefix)
+        self.assertRaisesRegexp(SelectorError, r'You must specify "children" for Group parser', Group)
+        # missing name of children elements
+        self.assertRaisesRegexp(SelectorError, r'Children inherited from BaseNamedSelector',
+            lambda: Prefix(children=[String()]))
+        self.assertRaisesRegexp(SelectorError, r'Children inherited from BaseNamedSelector',
+            lambda: Group(children=[String()]))
+        self.assertRaisesRegexp(SelectorError, r'Children inherited from BaseNamedSelector',
+            lambda: Prefix(children=[Prefix(children=[String()])]))
+        self.assertRaisesRegexp(SelectorError, r'Children inherited from BaseNamedSelector',
+            lambda: Prefix(children=[Group(name='x', children=[String()])]))
+
+
 class TestBaseSelector(unittest.TestCase):
     selector_class = BaseSelector
     selector_kwargs = {}
@@ -84,9 +100,8 @@ class TestSelector(TestBaseSelector):
 
 
 class MockNamedSelector(BaseNamedSelector):
-    def _process_nodes(self, nodes, context):
-        values = [node.extract() for node in nodes]
-        return {self.name: self._flatten_values(values)}
+    def _process_named_nodes(self, nodes, context):
+        return [node.extract() for node in nodes]
 
 
 class TestBaseNamedSelector(TestBaseSelector):

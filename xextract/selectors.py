@@ -20,7 +20,6 @@ class BaseSelector(object):
     def __init__(self, css=None, xpath=None, namespaces=None, children=None):
         if xpath and css:
             raise SelectorError('At most one of "xpath" or "css" attributes can be specified.')
-
         if xpath:
             self.raw_xpath = xpath
         elif css:
@@ -29,6 +28,11 @@ class BaseSelector(object):
             self.raw_xpath = 'self::*'
         self.namespaces = namespaces
         self.children = children
+        # ensure that all children inherited from BaseNamedSelector have names
+        if self.children:
+            for child in self.children:
+                if isinstance(child, BaseNamedSelector) and child.name is None:
+                    raise SelectorError('Children inherited from BaseNamedSelector should have "name" specified.')
         self._propagate_namespaces()
 
     def _propagate_namespaces(self):
@@ -57,12 +61,7 @@ class BaseSelector(object):
     def _parse(self, extractor, context):
         # select the nodes based on the xpath/css selector
         nodes = extractor.select(self.compiled_xpath)
-        self._validate_nodes(nodes)
-        # parse out the values out of the nodes
         return self._process_nodes(nodes, context)
-
-    def _validate_nodes(self, nodes):
-        pass
 
     def _process_nodes(self, nodes, context):
         raise NotImplementedError
@@ -75,6 +74,11 @@ class BaseSelector(object):
 
 
 class Prefix(BaseSelector):
+    def __init__(self, **kwargs):
+        super(Prefix, self).__init__(**kwargs)
+        if self.children is None:
+            raise SelectorError('You must specify "children" for Prefix parser.')
+
     def _process_nodes(self, nodes, context):
         parsed_data = {}
         for child in self.children:
@@ -83,19 +87,27 @@ class Prefix(BaseSelector):
 
 
 class BaseNamedSelector(BaseSelector):
-    def __init__(self, name, quant='*', **kwargs):
+    def __init__(self, name=None, quant='*', **kwargs):
         super(BaseNamedSelector, self).__init__(**kwargs)
         self.name = name
         self.quantity = Quantity(quant)
 
-    def _validate_nodes(self, nodes):
+    def _process_nodes(self, nodes, context):
+        # validate number of nodes
         num_nodes = len(nodes)
-        # check the number of nodes
         if not self.quantity.check_quantity(num_nodes):
             raise ParsingError(
                 'Number of "%s" elements, %s, does not match the expected quantity "%s".' %
                 (self.name, num_nodes, self.quantity.raw_quantity))
-        return nodes
+
+        values = self._process_named_nodes(nodes, context)
+        if self.name is None:
+            return self._flatten_values(values)
+        else:
+            return {self.name: self._flatten_values(values)}
+
+    def _process_named_nodes(self, nodes, context):
+        raise NotImplementedError
 
     def _flatten_values(self, values):
         if self.quantity.is_single:
@@ -105,20 +117,24 @@ class BaseNamedSelector(BaseSelector):
 
 
 class Group(BaseNamedSelector):
-    def _process_nodes(self, nodes, context):
+    def __init__(self, **kwargs):
+        super(Group, self).__init__(**kwargs)
+        if self.children is None:
+            raise SelectorError('You must specify "children" for Group parser.')
+
+    def _process_named_nodes(self, nodes, context):
         values = []
         for node in nodes:
             child_parsed_data = {}
             for child in self.children:
                 child_parsed_data.update(child._parse(node, context))
             values.append(child_parsed_data)
-        return {self.name: self._flatten_values(values)}
+        return values
 
 
 class Element(BaseNamedSelector):
-    def _process_nodes(self, nodes, context):
-        values = [node._root for node in nodes]
-        return {self.name: self._flatten_values(values)}
+    def _process_named_nodes(self, nodes, context):
+        return [node._root for node in nodes]
 
 
 class String(BaseNamedSelector):
@@ -133,13 +149,12 @@ class String(BaseNamedSelector):
         else:
             self.attr = '@' + attr
 
-    def _process_nodes(self, nodes, context):
+    def _process_named_nodes(self, nodes, context):
         values = []
         for node in nodes:
             value = u''.join(node.select(self.attr).extract())
             values.append(value)
-        values = self._process_values(values, context)
-        return {self.name: self._flatten_values(values)}
+        return self._process_values(values, context)
 
     def _process_values(self, values, context):
         return values
