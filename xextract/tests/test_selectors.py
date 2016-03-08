@@ -1,3 +1,4 @@
+import copy
 from datetime import datetime
 import unittest
 
@@ -142,6 +143,13 @@ class TestBaseNamedSelector(TestBaseSelector):
 
         self.assertIsInstance(self.selector_class(css='ul', quant='+', **self.selector_kwargs).parse(self.html)['val'], list)
         self.assertIsInstance(self.selector_class(css='li', quant='+', **self.selector_kwargs).parse(self.html)['val'], list)
+
+    def test_missing_name(self):
+        no_name_selector_kwargs = copy.copy(self.selector_kwargs)
+        del no_name_selector_kwargs['name']
+        self.assertIsNone(self.selector_class(css='ol', quant=0, **no_name_selector_kwargs).parse(self.html))
+        self.assertIsInstance(self.selector_class(css='ul', quant=1, **no_name_selector_kwargs).parse(self.html), self.selector_type)
+        self.assertIsInstance(self.selector_class(css='li', quant=2, **no_name_selector_kwargs).parse(self.html), list)
 
 
 class TestString(TestBaseNamedSelector):
