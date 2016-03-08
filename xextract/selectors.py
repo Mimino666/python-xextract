@@ -8,6 +8,11 @@ from .extractors import XPathExtractor, HtmlXPathExtractor, XmlXPathExtractor
 from .quantity import Quantity
 
 
+__all__ = [
+    'SelectorError', 'ParsingError',
+    'Prefix', 'Group', 'Element', 'String', 'Url', 'DateTime']
+
+
 class SelectorError(Exception):
     pass
 

@@ -1,3 +1,3 @@
-from .selectors import Prefix, Group, Element, String, Url, DateTime, ParsingError
+from .selectors import *
 
 __version__ = '0.0.7'
