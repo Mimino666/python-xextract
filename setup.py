@@ -12,7 +12,7 @@ with open('LICENSE') as f:
 
 setup(
     name='xextract',
-    version='0.0.7',
+    version='0.0.8',
     description='Extract structured data from HTML and XML like a boss.',
     long_description=readme,
     author='Michal "Mimino" Danilak',
