@@ -3,15 +3,6 @@ import re
 import six
 
 
-# quantity types
-Q_INVALID = 0
-Q_STAR = 1
-Q_PLUS = 2
-Q_QUES = 3
-Q_1D = 4
-Q_2D = 5
-
-
 class Quantity(object):
     '''Quantity provides a conveniet way to verify the number of objects.
     With a regexp-like syntax specify, what number of objects do you expect.
@@ -23,81 +14,82 @@ class Quantity(object):
         + - one or more items
         ? - zero or one item
         num - specified number of items (0 <= num)
-        num1, num2 - number of items in interval [num1, num2] (0 <= num1 <= num2).
+        lower, upper - number of items in interval [lower, upper] (0 <= lower <= upper).
     '''
-
-    _quant_re = re.compile(
-        r'^\s*(\*|\+|\?|\s*(\d+)\s*|\s*(\d+)\s*,\s*(\d+)\s*)\s*$', re.UNICODE)
-
     def __init__(self, quantity='*'):
         self.raw_quantity = quantity
-        self.quantity_type = self._parse_quantity(quantity)
-        if self.quantity_type == Q_INVALID:
+        self.lower = self.upper = 0
+        self._check_quantity = self._parse_quantity(quantity)
+        if self._check_quantity is None:
             raise ValueError('Invalid quantity: "%s"' % repr(quantity))
 
     def check_quantity(self, n):
         if not isinstance(n, six.integer_types):
             raise ValueError('Invalid argument for "check_quantity()".'
                 'Integer expected, %s received: "%s"' % (type(n), n))
-        if self.quantity_type == Q_STAR:
-            return n >= 0
-        elif self.quantity_type == Q_PLUS:
-            return n >= 1
-        elif self.quantity_type == Q_QUES:
-            return n == 0 or n == 1
-        elif self.quantity_type == Q_1D:
-            return n == self.num
-        elif self.quantity_type == Q_2D:
-            return self.num1 <= n and n <= self.num2
-        return False
+        return self._check_quantity(n)
+
+    def _check_star(self, n):
+        return n >= 0
+
+    def _check_plus(self, n):
+        return n >= 1
+
+    def _check_question_mark(self, n):
+        return 0 <= n <= 1
+
+    def _check_1d(self, n):
+        return n == self.upper
+
+    def _check_2d(self, n):
+        return self.lower <= n <= self.upper
+
+    _quantity_parsers = (
+        # regex, check_funcname
+        (re.compile(r'^\s*\*\s*$'), '_check_star'),
+        (re.compile(r'^\s*\+\s*$'), '_check_plus'),
+        (re.compile(r'^\s*\?\s*$'), '_check_question_mark'),
+        (re.compile(r'^\s*(?P<upper>\d+)\s*$'), '_check_1d'),
+        (re.compile(r'^\s*(?P<lower>\d+)\s*,\s*(?P<upper>\d+)\s*$'), '_check_2d'))
 
     def _parse_quantity(self, quantity):
+        # quantity is specified as single integer
         if isinstance(quantity, six.integer_types):
-            self.num = quantity
-            if 0 <= self.num:
-                return Q_1D
+            self.upper = quantity
+            if 0 <= self.upper:
+                return self._check_1d
             else:
-                return Q_INVALID
+                return None
 
+        # quantity is specified as pair of integers
         if isinstance(quantity, (list, tuple)) and len(quantity) == 2:
-            self.num1, self.num2 = quantity
-            if (isinstance(self.num1, six.integer_types) and
-                    isinstance(self.num2, six.integer_types) and
-                    0 <= self.num1 <= self.num2):
-                return Q_2D
+            self.lower, self.upper = quantity
+            if (isinstance(self.lower, six.integer_types) and
+                    isinstance(self.upper, six.integer_types) and
+                    0 <= self.lower <= self.upper):
+                return self._check_2d
             else:
-                return Q_INVALID
+                return None
 
         if not isinstance(quantity, six.string_types):
-            return Q_INVALID
+            return None
 
-        match = self._quant_re.match(quantity)
-        if not match:
-            return Q_INVALID
-
-        if match.group(4):
-            self.num1 = int(match.group(3))
-            self.num2 = int(match.group(4))
-            if 0 <= self.num1 <= self.num2:
-                return Q_2D
-            else:
-                return Q_INVALID
-        elif match.group(2):
-            self.num = int(match.group(2))
-            if 0 <= self.num:
-                return Q_1D
-            else:
-                return Q_INVALID
-        elif match.group(1) == '*':
-            return Q_STAR
-        elif match.group(1) == '+':
-            return Q_PLUS
-        elif match.group(1) == '?':
-            return Q_QUES
-        return Q_INVALID
+        # parse quantity
+        for parser, check_funcname in self._quantity_parsers:
+            match = parser.search(quantity)
+            if match:
+                # parse groupdict values
+                for k, v in match.groupdict().iteritems():
+                    setattr(self, k, int(v))
+                # final check of lower/upper bounds
+                if self.lower <= self.upper:
+                    return getattr(self, check_funcname)
+                else:
+                    return None
+        return None
 
     @property
     def is_single(self):
         '''True, if the quantity represents a single element.'''
-        return (self.quantity_type == Q_QUES or
-            (self.quantity_type == Q_1D and self.num <= 1))
+        return (self._check_quantity == self._check_question_mark or
+            (self._check_quantity == self._check_1d and self.upper <= 1))

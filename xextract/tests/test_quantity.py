@@ -1,6 +1,6 @@
 import unittest
 
-from xextract.quantity import Quantity, Q_INVALID
+from xextract.quantity import Quantity
 
 
 class TestQuantity(unittest.TestCase):
@@ -11,7 +11,7 @@ class TestQuantity(unittest.TestCase):
             (1,2), (0,0)]
         for g in good:
             quantity = Quantity(g)
-            self.assertNotEqual(quantity.quantity_type, Q_INVALID)
+            self.assertIsNotNone(quantity._check_quantity)
 
         bad = ['', None, ' * * ', '+*', '  ', '1 2', '1,2,3', '+2', '-2', '3,2', 1.0,
                 -1, (3,2), (-1,5)]
