@@ -4,10 +4,8 @@ import six
 
 
 class Quantity(object):
-    '''Quantity provides a conveniet way to verify the number of objects.
-    With a regexp-like syntax specify, what number of objects do you expect.
-    By calling `check_quantity()` method you can verify whether the number
-    of objects satisfies the specified value.
+    '''Quantity is used to verify that the number of items satisfies the
+    expected quantity, which you specify with a regexp-like syntax.
 
     Syntax:
         * - zero or more items
@@ -78,9 +76,10 @@ class Quantity(object):
         for parser, check_funcname in self._quantity_parsers:
             match = parser.search(quantity)
             if match:
-                # parse groupdict values
-                for k, v in match.groupdict().iteritems():
-                    setattr(self, k, int(v))
+                # set lower and upper values
+                gd = match.groupdict()
+                self.lower = int(gd.get('lower', 0))
+                self.upper = int(gd.get('upper', 0))
                 # final check of lower/upper bounds
                 if self.lower <= self.upper:
                     return getattr(self, check_funcname)
