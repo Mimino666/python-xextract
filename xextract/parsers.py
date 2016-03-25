@@ -8,22 +8,24 @@ from .extractors import XPathExtractor, HtmlXPathExtractor, XmlXPathExtractor
 from .quantity import Quantity
 
 
-__all__ = ['SelectorError', 'ParsingError',
+__all__ = ['ParserError', 'ParsingError',
            'Prefix', 'Group', 'Element', 'String', 'Url', 'DateTime']
 
 
-class SelectorError(Exception):
+class ParserError(Exception):
+    '''Parser is badly initialized.'''
     pass
 
 
 class ParsingError(Exception):
+    '''Numebr of parsed elements doesn't match the expected quantity.'''
     pass
 
 
-class BaseSelector(object):
+class BaseParser(object):
     def __init__(self, css=None, xpath=None, namespaces=None, children=None):
         if xpath and css:
-            raise SelectorError('At most one of "xpath" or "css" attributes can be specified.')
+            raise ParserError('At most one of "xpath" or "css" attributes can be specified.')
         if xpath:
             self.raw_xpath = xpath
         elif css:
@@ -33,11 +35,11 @@ class BaseSelector(object):
         self._compiled_xpath = None  # compile xpath lazily
         self.namespaces = namespaces
         self.children = children
-        # ensure that all children elements inherited from BaseNamedSelector have names
+        # ensure that all children elements inherited from BaseNamedParser have names
         if self.children:
             for child in self.children:
-                if isinstance(child, BaseNamedSelector) and child.name is None:
-                    raise SelectorError('Children elements inherited from BaseNamedSelector should have "name" specified.')
+                if isinstance(child, BaseNamedParser) and child.name is None:
+                    raise ParserError('Children elements inherited from BaseNamedParser should have "name" specified.')
         self._propagate_namespaces()
 
     def _propagate_namespaces(self):
@@ -78,11 +80,11 @@ class BaseSelector(object):
         return self._compiled_xpath
 
 
-class Prefix(BaseSelector):
+class Prefix(BaseParser):
     def __init__(self, **kwargs):
         super(Prefix, self).__init__(**kwargs)
         if self.children is None:
-            raise SelectorError('You must specify "children" for Prefix parser.')
+            raise ParserError('You must specify "children" for Prefix parser.')
 
     def _process_nodes(self, nodes, context):
         parsed_data = {}
@@ -91,9 +93,9 @@ class Prefix(BaseSelector):
         return parsed_data
 
 
-class BaseNamedSelector(BaseSelector):
+class BaseNamedParser(BaseParser):
     def __init__(self, name=None, quant='*', **kwargs):
-        super(BaseNamedSelector, self).__init__(**kwargs)
+        super(BaseNamedParser, self).__init__(**kwargs)
         self.name = name
         self.quantity = Quantity(quant)
 
@@ -121,11 +123,11 @@ class BaseNamedSelector(BaseSelector):
             return values
 
 
-class Group(BaseNamedSelector):
+class Group(BaseNamedParser):
     def __init__(self, **kwargs):
         super(Group, self).__init__(**kwargs)
         if self.children is None:
-            raise SelectorError('You must specify "children" for Group parser.')
+            raise ParserError('You must specify "children" for Group parser.')
 
     def _process_named_nodes(self, nodes, context):
         values = []
@@ -137,12 +139,12 @@ class Group(BaseNamedSelector):
         return values
 
 
-class Element(BaseNamedSelector):
+class Element(BaseNamedParser):
     def _process_named_nodes(self, nodes, context):
         return [node._root for node in nodes]
 
 
-class String(BaseNamedSelector):
+class String(BaseNamedParser):
     def __init__(self, attr='_text', **kwargs):
         super(String, self).__init__(**kwargs)
         if attr == '_text':

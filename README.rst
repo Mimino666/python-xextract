@@ -125,7 +125,7 @@ Parameters we passed to the parser have the following meaning:
     .. code-block:: python
 
         >>> String(name='name', css='.full-name', quant=2).parse(html)
-        xextract.selectors.ParsingError: Number of "name" elements, 1, does not match the expected quantity "2".
+        xextract.parsers.ParsingError: Number of "name" elements, 1, does not match the expected quantity "2".
 
 If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of matched elements, i.e. you can match zero or more elements and no exception is raised. Second, the extracted data will be returned as a (possibly empty) list of values (for more details see `quant`_ reference):
 
@@ -436,7 +436,7 @@ Examples:
     {'friends': []}
 
     >>> String(name='friends', css='.friend', quant='+').parse(html)
-    xextract.selectors.ParsingError: Number of "friends" elements, 0, does not match the expected quantity "+".
+    xextract.parsers.ParsingError: Number of "friends" elements, 0, does not match the expected quantity "+".
 
 
 ----
