@@ -8,9 +8,8 @@ from .extractors import XPathExtractor, HtmlXPathExtractor, XmlXPathExtractor
 from .quantity import Quantity
 
 
-__all__ = [
-    'SelectorError', 'ParsingError',
-    'Prefix', 'Group', 'Element', 'String', 'Url', 'DateTime']
+__all__ = ['SelectorError', 'ParsingError',
+           'Prefix', 'Group', 'Element', 'String', 'Url', 'DateTime']
 
 
 class SelectorError(Exception):
@@ -31,16 +30,18 @@ class BaseSelector(object):
             self.raw_xpath = GenericTranslator().css_to_xpath(css)
         else:
             self.raw_xpath = 'self::*'
+        self._compiled_xpath = None  # compile xpath lazily
         self.namespaces = namespaces
         self.children = children
-        # ensure that all children inherited from BaseNamedSelector have names
+        # ensure that all children elements inherited from BaseNamedSelector have names
         if self.children:
             for child in self.children:
                 if isinstance(child, BaseNamedSelector) and child.name is None:
-                    raise SelectorError('Children inherited from BaseNamedSelector should have "name" specified.')
+                    raise SelectorError('Children elements inherited from BaseNamedSelector should have "name" specified.')
         self._propagate_namespaces()
 
     def _propagate_namespaces(self):
+        '''Propagate namespaces to children elements.'''
         if self.namespaces and self.children:
             for child in self.children:
                 if not child.namespaces:
@@ -64,7 +65,6 @@ class BaseSelector(object):
         return self._parse(XmlXPathExtractor(body), {'url': url})
 
     def _parse(self, extractor, context):
-        # select the nodes based on the xpath/css selector
         nodes = extractor.select(self.compiled_xpath)
         return self._process_nodes(nodes, context)
 
@@ -73,7 +73,7 @@ class BaseSelector(object):
 
     @property
     def compiled_xpath(self):
-        if not hasattr(self, '_compiled_xpath'):
+        if self._compiled_xpath is None:
             self._compiled_xpath = etree.XPath(self.raw_xpath, namespaces=self.namespaces)
         return self._compiled_xpath
 

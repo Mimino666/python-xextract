@@ -10,8 +10,9 @@ class XPathExtractor(object):
     def __init__(self, body=None, namespaces=None, _root=None):
         self.namespaces = namespaces
         if _root is None:
-            _root = self._get_root(body)
-        self._root = _root
+            self._root = self._get_root(body)
+        else:
+            self._root = _root
 
     def _get_root(self, body, encoding=None):
         body = body.strip() or self._empty_doc

@@ -15,13 +15,13 @@ class TestBuild(unittest.TestCase):
         self.assertRaisesRegexp(SelectorError, r'You must specify "children" for Prefix parser', Prefix)
         self.assertRaisesRegexp(SelectorError, r'You must specify "children" for Group parser', Group)
         # missing name of children elements
-        self.assertRaisesRegexp(SelectorError, r'Children inherited from BaseNamedSelector',
+        self.assertRaisesRegexp(SelectorError, r'Children elements inherited from BaseNamedSelector',
             lambda: Prefix(children=[String()]))
-        self.assertRaisesRegexp(SelectorError, r'Children inherited from BaseNamedSelector',
+        self.assertRaisesRegexp(SelectorError, r'Children elements inherited from BaseNamedSelector',
             lambda: Group(children=[String()]))
-        self.assertRaisesRegexp(SelectorError, r'Children inherited from BaseNamedSelector',
+        self.assertRaisesRegexp(SelectorError, r'Children elements inherited from BaseNamedSelector',
             lambda: Prefix(children=[Prefix(children=[String()])]))
-        self.assertRaisesRegexp(SelectorError, r'Children inherited from BaseNamedSelector',
+        self.assertRaisesRegexp(SelectorError, r'Children elements inherited from BaseNamedSelector',
             lambda: Prefix(children=[Group(name='x', children=[String()])]))
 
 
