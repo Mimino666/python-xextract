@@ -2,18 +2,16 @@
 xextract
 ********
 
-*NOTE*: **xextract** is still under construction.
+Extract structured data from HTML and XML documents like a boss.
 
-Extract structured data from HTML and XML like a boss.
-
-**xextract** is simple enough for writing a one-line parser, yet powerful enough to be a part of a big project.
+**xextract** is simple enough for writing a one-line parser, yet powerful enough to be used in a big project.
 
 
 **Features**
 
 - Simple declarative style of parsers
 - Parsing of HTML and XML documents
-- Supports **xpath** and **css selectors**
+- Supports **xpath** and **css** selectors
 - Built-in self-validation to let you know when the structure of the website has changed
 - Speed - under the hood the library uses `lxml library <http://lxml.de/>`_ with compiled xpath selectors
 
@@ -30,56 +28,48 @@ Extract structured data from HTML and XML like a boss.
 A little taste of it
 ====================
 
+Let's parse `The Shawshank Redemption <http://www.imdb.com/title/tt0111161/>`_'s IMDB page:
+
 .. code-block:: python
 
   # fetch the website
-  import requests
-  response = requests.get('https://www.linkedin.com/in/barackobama')
+  >>> import requests
+  >>> response = requests.get('http://www.imdb.com/title/tt0111161/')
 
   # parse like a boss
-  from xextract import Prefix, Group, String, Url
-  Prefix(css='#profile', children=[
-      String(name='name', css='.full-name', quant=1),
-      String(name='title', css='.title', quant=1),
-      Group(name='jobs', css='#background-experience .section-item', quant='*', children=[
-          String(name='title', css='h4', quant=1),
-          String(name='company', css='h5', quant=1, attr='_all_text'),
-          Url(name='company_url', css='h5 a', quant='?'),
-          String(name='description', css='.description', quant='?')
-      ])
-  ]).parse(response.text, url=response.url)
+  >>> from xextract import Group, String
 
+  # title - use css selector
+  >>> String(css='h1[itemprop="name"]', quant=1).parse(response.text)
+  u'The Shawshank Redemption'
 
-Output:
+  # year - use xpath selector
+  >>> String(xpath='//*[@id="titleYear"]/a', quant=1).parse(response.text)
+  u'1994'
 
-.. code-block:: python
-
-  {'name': u'Barack Obama',
-   'title': u'President of the United States of America',
-   'jobs': [
-       {'company': u'United States of America',
-        'company_url': None,
-        'description': u'I am serving as the 44th President of the United States of America.',
-        'title': u'President'},
-       {'company': u'US Senate (IL-D)',
-        'company_url': u'http://www.linkedin.com/company/4560?trk=ppro_cprof',
-        'description': u'In the U.S. Senate, I sought to focus on tackling the challenges of a globalized, 21st century world with fresh thinking and a politics that no longer settles for the lowest common denominator.',
-        'title': u'US Senator'},
-       {'company': u'Illinois State Senate',
-        'company_url': None,
-        'description': u"Proudly representing the 13th District on Chicago's south side.",
-        'title': u'State Senator'},
-       {'company': u'University of Chicago Law School',
-        'company_url': u'http://www.linkedin.com/company/3878?trk=ppro_cprof',
-        'description': None,
-        'title': u'Senior Lecturer in Law'}]}
+  # cast list - parse structured data
+  >>> Group(css='.cast_list tr:not(:first-child)', children=[
+  ...   String(name='name', css='[itemprop="actor"]', attr='_all_text', quant=1),
+  ...   String(name='character', css='.character', attr='_all_text', quant=1)
+  ... ]).parse(response.text)
+  [
+    {
+        'name': u'Tim Robbins',
+        'character': u'Andy Dufresne'
+    },
+    {
+        'name': u'Morgan Freeman',
+        'character': u"Ellis Boyd 'Red' Redding"
+    },
+    ...
+  ]
 
 
 ============
 Installation
 ============
 
-To install **xextract**, simply:
+To install **xextract**, simply run:
 
 .. code-block:: bash
 
@@ -90,248 +80,123 @@ Requirements: six, lxml, cssselect
 Supported Python versions are 2.6, 2.7, 3.x.
 
 
-===========
-Basic usage
-===========
-
-In the examples below we will demonstrate how to parse the data from a Linkedin profile,
-so include the following code to the top of the file:
-
-.. code-block:: python
-
-    from xextract import *
-    import requests
-    response = requests.get('https://www.linkedin.com/in/barackobama')
-    html, url = response.text, response.url
-
------
-
-To extract the name from a Linkedin profile, call:
-
-.. code-block:: python
-
-    >>> String(name='name', css='.full-name', quant=1).parse(html)
-    {'name': u'Barack Obama'}
-
-
-You can see that the **parsed data are returned in a dictionary**.
-
-Parameters we passed to the parser have the following meaning:
-
-- ``name`` (required) - dictionary key under which to store the parsed data.
-- ``css`` (required) - css selector to the HTML element containing the data.
-- ``quant`` (optional) - number of HTML elements we expect to match with the css selector. In the above case we expect exactly one element. If the number of elements doesn't match, ``ParsingError`` exception is raised:
-
-    .. code-block:: python
-
-        >>> String(name='name', css='.full-name', quant=2).parse(html)
-        xextract.parsers.ParsingError: Number of "name" elements, 1, does not match the expected quantity "2".
-
-If you don't pass ``quant`` parameter, two things will happen. First, there will be no validation on the number of matched elements, i.e. you can match zero or more elements and no exception is raised. Second, the extracted data will be returned as a (possibly empty) list of values (for more details see `quant`_ reference):
-
-.. code-block:: python
-
-    >>> String(name='name', css='.full-name').parse(html)
-    {'name': [u'Barack Obama']}  # note that the extracted data are in the list
-
------
-
-In the previous example we could have used xpath instead of css selector:
-
-.. code-block:: python
-
-    >>> String(name='name', xpath='//*[@class="full-name"]', quant=1).parse(html)
-    {'name': u'Barack Obama'}
-
-
------
-
-By default, ``String`` extracts the text content of the element. To extract the data from an HTML attribute, use ``attr`` parameter:
-
-.. code-block:: python
-
-    >>> String(name='css-class', css='span', quant=1, attr='class').parse('<span class="hello"></span>')
-    {'css-class': u'hello'}
-
-
------
-
-To extract the whole text "*500+ connections*" from the following HTML structure:
-
-.. code-block:: html
-
-    <div class="member-connections">
-        <strong>500+</strong>
-        connections
-    </div>
-
-By default, ``String`` parser extracts only the text directly from the matched elements, but not their descendants:
-
-.. code-block:: python
-
-    >>> String(name='connections', css='.member-connections', quant=1).parse(html)
-    {'connections': u' connections'}
-
-To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *'_all_text'*:
-
-.. code-block:: python
-
-    >>> String(name='connections', css='.member-connections', quant=1, attr='_all_text').parse(html)
-    {'connections': u'500+ connections'}
-
-
------
-
-To extract the url of the profile picture, use ``Url`` parser instead of ``String``:
-
-.. code-block:: python
-
-    >>> Url(name='profile-picture', css='.profile-picture img', quant=1, attr='src').parse(html, url=url)
-    {'profile-picture': u'https://media.licdn.com/mpr/mpr/shrink_200_200/p/2/000/1a3/129/3a73f4c.jpg'}
-
-
-When you use ``Url`` parser and pass ``url`` parameter to ``parse()`` method,
-the parser will extract the absolute url address.
-By default, ``Url`` extracts the value out of *href* attribute of the matched element.
-If you want to extract the value out of a different attribute (e.g. *src*), pass it as ``attr`` parameter.
-
------
-
-To extract the list of jobs and from each job to store the company name and the job title,
-use ``Group`` parser to group the job data together:
-
-.. code-block:: python
-
-    >>> Group(name='jobs', css='#background-experience .section-item', quant='+', children=[
-    ...     String(name='title', css='h4', quant=1),
-    ...     String(name='company', css='h5', quant=1, attr='_all_text')
-    ... ]).parse(html)
-    {'jobs': [
-        {'company': u'United States of America', 'title': u'President'},
-        {'company': u'US Senate (IL-D)', 'title': u'US Senator'},
-        {'company': u'Illinois State Senate', 'title': u'State Senator'},
-        {'company': u'University of Chicago Law School', 'title': u'Senior Lecturer in Law'}]}
-
-
-In this case the ``Group`` matched four elements, each of those containing a single ``h4`` and ``h5`` elements.
-
-
-================
-Parser reference
-================
+=======
+Parsers
+=======
 
 ------
 String
 ------
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'_text'``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``'self::*'``), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'_text'``), `namespaces`_ (optional)
 
-Returns the raw string extracted from the matched element.
+Returns the string data extracted from the matched element.
 Returned value is always unicode.
 
-Use ``attr`` parameter to extract the data from an HTML attribute.
+Use ``attr`` parameter to extract the data from an HTML/XML attribute.
 
-By default, ``String`` extracts the text content of the matched element, but not its descendants.
-To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value *'_all_text'*:
+By default, ``String`` extracts the text content of only the matched element, but not its descendants.
+To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value ``'_all_text'``:
 
 Example:
 
 .. code-block:: python
 
-    >>> String(name='text', css='span', quant=1).parse('<span>Hello <b>world!</b></span>')
-    {'text': u'Hello '}
+    >>> String(css='span', quant=1).parse('<span>Hello <b>world</b>!</span>')
+    u'Hello !'
 
-    >>> String(name='text', css='span', quant=1, attr='_all_text').parse('<span>Hello <b>world!</b></span>')
-    {'text': u'Hello world!'}
+    >>> String(css='span', quant=1, attr='_all_text').parse('<span>Hello <b>world</b>!</span>')
+    u'Hello world!''
 
+    >>> String(css='span', quant=1, attr='class').parse('<span class="text-success"></span>')
+    u'text-success'
 
 ---
 Url
 ---
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'href'``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``'self::*'``), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'href'``), `namespaces`_ (optional)
 
 Behaves like ``String`` parser, but with two exceptions:
 
 * default value for ``attr`` parameter is ``'href'``
-* if you pass ``url`` parameter to ``parse()`` method, the absolute urls will be extracted and returned
+* if you pass ``url`` parameter to ``parse()`` method, the absolute url will be constructed and returned
 
 Example:
 
 .. code-block:: python
 
     >>> html = '<a href="/test">Link</a>'
-    >>> Url(name='url', css='a', quant=1).parse(html)
-    {'url': u'/test'}  # without url passed, Url parser behaves just like the String parser
+    >>> Url(css='a', quant=1).parse(html)
+    u'/test'
 
-    >>> Url(name='url', css='a', quant=1).parse(html, url='http://github.com/Mimino666')
-    {'url': u'http://github.com/test'}  # absolute url address. Told ya!
+    >>> Url(css='a', quant=1).parse(html, url='http://github.com/Mimino666')
+    u'http://github.com/test'  # absolute url address. Told ya!
 
 
 --------
 DateTime
 --------
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), ``format`` (required), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'_text'``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``'self::*'``), ``format`` (required), `quant`_ (optional, default ``'*'``), `attr`_ (optional, default ``'_text'``), `namespaces`_ (optional)
 
-Returns the ``datetime`` object constructed out of the parsed data with: ``datetime.strptime(value, format)``.
+Returns the ``datetime`` object constructed out of the extracted data: ``datetime.strptime(value, format)``.
 
-Use ``format`` parameter to specify how to parse the ``datetime`` object. Syntax is described in the `Python documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
+``format`` syntax is described in the `Python documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
 
 Example:
 
 .. code-block:: python
 
-    >>> DateTime(name='christmas', css='span', quant=1, format='%d.%m.%Y').parse('<span>24.12.2015</span>')
-    {'christmas': datetime.datetime(2015, 12, 24, 0, 0)}
+    >>> DateTime(css='span', quant=1, format='%d.%m.%Y').parse('<span>24.12.2015</span>')
+    datetime.datetime(2015, 12, 24, 0, 0)
 
 
 -------
 Element
 -------
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `quant`_ (optional, default ``'*'``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``'self::*'``), `quant`_ (optional, default ``'*'``), `namespaces`_ (optional)
 
-Returns the instance of ``lxml.etree._Element``.
-
-This parser doesn't extract any value, but returns the matched element itself.
+Returns lxml instance (``lxml.etree._Element``) of matched element.
 
 Example:
 
 .. code-block:: python
 
-    >>> Element(name='span', css='span', quant=1).parse('<span>Hello</span>')
-    {'span': <Element span at 0x2ac2990>}
+    >>> Element(css='span', quant=1).parse('<span>Hello</span>')
+    <Element span at 0x2ac2990>
 
 
 -----
 Group
 -----
 
-**Parameters**: `name`_ (required), `css / xpath`_ (required), `children`_ (required), `quant`_ (optional, default ``'*'``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``'self::*'``), `children`_ (required), `quant`_ (optional, default ``'*'``), `namespaces`_ (optional)
 
 Returns the dictionary containing the data extracted by the parsers listed in ``children`` parameter.
+All parsers listed in ``children`` parameter **must** have ``name`` specified.
 
-Typical use case for this parser is when you want to parse a list of user profiles and each profile further contains additional fields like name, address, etc. Use ``Group`` parser to group the fields of each profile together.
+Typical use case for this parser is when you want to parse structured data, e.g. list of user profiles, where each profile contains fields like name, address, etc. Use ``Group`` parser to group the fields of each user profile together.
 
 Example:
 
 .. code-block:: python
 
     >>> html = '<ul><li id="id1">Hello</li> <li id="id2">world!</li></ul>'
-    >>> Group(name='data', css='li', quant=2, children=[
+    >>> Group(css='li', quant=2, children=[
     ...     String(name='id', xpath='self::*', quant=1, attr='id'),
     ...     String(name='text', xpath='self::*', quant=1)
     ... ]).parse(html)
-    {'data': [
-        {'text': u'Hello', 'id': u'id1'},
-        {'text': u'world!', 'id': u'id2'}]}
+    [{'text': u'Hello', 'id': u'id1'},
+     {'text': u'world!', 'id': u'id2'}]
 
 
 ------
 Prefix
 ------
 
+TODO
 
 =================
 Parser parameters
@@ -343,9 +208,22 @@ name
 
 **Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_
 
-Specifies the dictionary key under which to store the extracted data.
+**Default value**: ``None``
 
-If multiple parsers under the ``Group`` or ``Prefix`` parser have the same ``name``, the behavior is undefined.
+If specified, then the extracted data will be returned as a dictionary, with the ``name`` as the key and the data as the value.
+
+All parsers listed in ``children`` parameter of ``Group`` or ``Prefix`` parser **must** have ``name`` specified.
+If multiple children parsers have the same ``name``, the behavior is undefined.
+
+Example:
+
+.. code-block:: python
+
+  >>> String(css='span', quant=1).parse('<span>Hello!</span>')
+  u'Hello!'
+
+  >>> String(name='message', quant=1).parse('<span>Hello!</span>')
+  {'message': u'Hello!'}
 
 
 -----------
@@ -354,19 +232,25 @@ css / xpath
 
 **Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_, `Prefix`_
 
+**Default value (xpath)**: ``'self::*'``
+
 Use either ``css`` or ``xpath`` parameter (but not both) to select the elements from which to extract the data.
 
 Under the hood css selectors are translated into equivalent xpath selectors.
 
-For the children of the ``Prefix`` or ``Group`` parsers the elements are selected relative to the elements matched by the parent parser. For example:
+For the children of ``Prefix`` or ``Group`` parser the elements are selected relative to the elements matched by the parent parser.
+
+Example:
 
 .. code-block:: python
 
     Prefix(xpath='//*[@id="profile"]', children=[
-        # equivalent to: //*[@id="profile"]/descendant-or-self::*[@class="full-name"]
-        String(name='name', css='.full-name', quant=1),
+        # equivalent to: //*[@id="profile"]/descendant-or-self::*[@class="name"]
+        String(name='name', css='.name', quant=1),
+
         # equivalent to: //*[@id="profile"]/*[@class="title"]
         String(name='title', xpath='*[@class="title"]', quant=1),
+
         # equivalent to: //*[@class="subtitle"]
         String(name='subtitle', xpath='//*[@class="subtitle"]', quant=1)
     ])
@@ -381,8 +265,8 @@ quant
 **Default value**: ``'*'``
 
 Number of matched elements is validated against the ``quant`` parameter.
-If the number of elements doesn't match the expected quantity, ``ParsingError`` exception is raised.
-In practice you can use this to be notified when the website changed its HTML structure.
+If the number of elements doesn't match the expected quantity, ``xextract.parsers.ParsingError`` exception is raised.
+In practice you can use this to be alerted when the website changed its HTML structure.
 
 Syntax for ``quant`` mimics the regular expressions.
 You can either pass the value as a string, single integer or tuple of two integers.
@@ -390,7 +274,7 @@ You can either pass the value as a string, single integer or tuple of two intege
 Depending on the value of ``quant``, the extracted data are returned either as a single value or a list of values.
 
 +-------------------+-----------------------------------------------+-----------------------------+
-| Value of ``quant``| Meaning                                       | Extracted data              |
+| Value of ``quant``| Meaning                                       | Extracted data type         |
 +===================+===============================================+=============================+
 | ``'*'`` (default) | Zero or more elements.                        | List of values              |
 +-------------------+-----------------------------------------------+-----------------------------+
@@ -410,33 +294,33 @@ Depending on the value of ``quant``, the extracted data are returned either as a
 |                   | You can pass either a string or tuple.        |                             |
 +-------------------+-----------------------------------------------+-----------------------------+
 
-Examples:
+Example:
 
 .. code-block:: python
 
-    >>> String(name='name', css='.name', quant=1).parse(html)
-    {'name': u'Barack Obama'}
+    >>> String(css='.name', quant=1).parse(html)
+    u'Barack Obama'
 
-    >>> String(name='name', css='.name', quant='1').parse(html)  # same as above
-    {'name': u'Barack Obama'}
+    >>> String(css='.name', quant='1').parse(html)  # same as above
+    u'Barack Obama'
 
-    >>> String(name='name', css='.name', quant=(1,2)).parse(html)
-    {'name': [u'Barack Obama']}
+    >>> String(css='.name', quant=(1,2)).parse(html)
+    [u'Barack Obama']
 
-    >>> String(name='name', css='.name', quant='1,2').parse(html)  # same as above
-    {'name': [u'Barack Obama']}
+    >>> String(css='.name', quant='1,2').parse(html)  # same as above
+    [u'Barack Obama']
 
-    >>> String(name='middle-name', css='.middle', quant='?').parse(html)
-    {'middle-name': None}
+    >>> String(css='.middle-name', quant='?').parse(html)
+    None
 
-    >>> String(name='job-titles', css='#background-experience .section-item h4', quant='+').parse(html)
-    {'job-titles': [u'President', u'US Senator', u'State Senator', u'Senior Lecturer in Law']}
+    >>> String(css='.job-titles', quant='+').parse(html)
+    [u'President', u'US Senator', u'State Senator', u'Senior Lecturer in Law']
 
-    >>> String(name='friends', css='.friend', quant='*').parse(html)
-    {'friends': []}
+    >>> String(css='.friends', quant='*').parse(html)
+    []
 
-    >>> String(name='friends', css='.friend', quant='+').parse(html)
-    xextract.parsers.ParsingError: Number of "friends" elements, 0, does not match the expected quantity "+".
+    >>> String(css='.friends', quant='+').parse(html)
+    xextract.parsers.ParsingError: Number of "None" elements, 0, does not match the expected quantity "+".
 
 
 ----
@@ -447,7 +331,7 @@ attr
 
 **Default value**: ``'href'`` for ``Url`` parser. ``'_text'`` otherwise.
 
-Use ``attr`` parameter to specify what to extract from the matched element.
+Use ``attr`` parameter to specify what data to extract from the matched element.
 
 +-------------------+-----------------------------------------------------+
 | Value of ``attr`` | Meaning                                             |
@@ -464,34 +348,29 @@ Use ``attr`` parameter to specify what to extract from the matched element.
 |                   | returned.                                           |
 +-------------------+-----------------------------------------------------+
 
-For the following HTML structure:
-
-.. code-block:: html
-
-    <span class="name">Barack <strong>Obama</strong> III.</span>
-    <a href="/test">Link</a>
-
-He are a few examples:
+Example:
 
 .. code-block:: python
 
-    >>> String(name='name', css='.name', quant=1).parse(html)
-    {'name': u'Barack  III.'}
+    html = '<span class="name">Barack <strong>Obama</strong> III.</span> <a href="/test">Link</a>'
 
-    >>> String(name='name', css='.name', quant=1, attr='_text').parse(html)  # same as above
-    {'name': u'Barack  III.'}
+    >>> String(css='.name', quant=1).parse(html)
+    u'Barack  III.'
 
-    >>> String(name='full-name', css='.name', quant=1, attr='_all_text').parse(html)
-    {'full-name': u'Barack Obama III.'}
+    >>> String(css='.name', quant=1, attr='_text').parse(html)  # same as above
+    u'Barack  III.'
 
-    >>> String(name='link', css='a', quant='1').parse(html)  # String extracts text content by default
-    {'link': u'Link'}
+    >>> String(css='.name', quant=1, attr='_all_text').parse(html)  # full name
+    u'Barack Obama III.'
 
-    >>> Url(name='link', css='a', quant='1').parse(html)  # Url extracts href by default
-    {'link': u'/test'}
+    >>> String(css='a', quant='1').parse(html)  # String extracts text content by default
+    u'Link'
 
-    >>> String(name='id', css='a', quant='1', attr='id').parse(html)  # non-existent attributes return empty string
-    {'id': u''}
+    >>> Url(css='a', quant='1').parse(html)  # Url extracts href by default
+    u'/test'
+
+    >>> String(css='a', quant='1', attr='id').parse(html)  # non-existent attributes return empty string
+    u''
 
 
 --------
@@ -504,3 +383,5 @@ children
 ----------
 namespaces
 ----------
+
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_, `Prefix`_
