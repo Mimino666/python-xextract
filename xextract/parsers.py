@@ -175,8 +175,9 @@ class Url(String):
     def _process_values(self, values, context):
         url = context.get('url')
         if url:
-            values = [urlparse.urljoin(url, v) for v in values]
-        return values
+            return [urlparse.urljoin(url, v) for v in values]
+        else:
+            return values
 
 
 class DateTime(String):
