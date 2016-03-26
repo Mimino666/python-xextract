@@ -103,9 +103,13 @@ class BaseNamedParser(BaseParser):
         # validate number of nodes
         num_nodes = len(nodes)
         if not self.quantity.check_quantity(num_nodes):
+            if self.name:
+                name_msg = '(name="%s")' % self.name
+            else:
+                name_msg = ''
             raise ParsingError(
-                'Number of "%s" elements, %s, does not match the expected quantity "%s".' %
-                (self.name, num_nodes, self.quantity.raw_quantity))
+                'Parser %s%s matched %s elements ("%s" expected).' %
+                (self.__class__.__name__, name_msg, num_nodes, self.quantity.raw_quantity))
 
         values = self._process_named_nodes(nodes, context)
         if self.name is None:
