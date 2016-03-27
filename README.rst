@@ -37,7 +37,7 @@ Let's parse `The Shawshank Redemption <http://www.imdb.com/title/tt0111161/>`_'s
   >>> response = requests.get('http://www.imdb.com/title/tt0111161/')
 
   # parse like a boss
-  >>> from xextract import Group, String
+  >>> from xextract import String, Group
 
   # use css selector to extract title
   >>> String(css='h1[itemprop="name"]', quant=1).parse(response.text)
@@ -87,7 +87,7 @@ String
 **Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `namespaces`_ (optional)
 
 Extract string data from the matched element(s).
-Extracted data are always unicode.
+Extracted value is always unicode.
 
 By default, ``String`` extracts the text content of only the matched element, but not its descendants.
 To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value ``"_all_text"``:
@@ -248,9 +248,11 @@ Example:
 
 .. code-block:: python
 
+  # when `name` is not specified, raw value is returned
   >>> String(css='span', quant=1).parse('<span>Hello!</span>')
   u'Hello!'
 
+  # when `name` is specified, dictionary is returned with `name` as the key
   >>> String(name='message', css='span', quant=1).parse('<span>Hello!</span>')
   {'message': u'Hello!'}
 
@@ -370,7 +372,7 @@ Use ``attr`` parameter to specify what data to extract from the matched element.
 +-------------------+-----------------------------------------------------+
 | ``"_all_text"``   | Extract and concatenate the text content of         |
 |                   | the matched element and all its descendants.        |
-+-------------------------------------------------------------------------+
++-------------------+-----------------------------------------------------+
 | ``"_name"``       | Extract tag name of the matched element.            |
 +-------------------+-----------------------------------------------------+
 | ``att_name``      | Extract the value out of ``att_name`` attribute of  |
@@ -387,20 +389,17 @@ Example:
     >>> from xextract import String, Url
     >>> content = '<span class="name">Barack <strong>Obama</strong> III.</span> <a href="/test">Link</a>'
 
-    >>> String(css='.name', quant=1).parse(content)
+    >>> String(css='.name', quant=1).parse(content)  # default attr is "_text"
     u'Barack  III.'
 
     >>> String(css='.name', quant=1, attr='_text').parse(content)  # same as above
     u'Barack  III.'
 
-    >>> String(css='.name', quant=1, attr='_all_text').parse(content)  # full name
+    >>> String(css='.name', quant=1, attr='_all_text').parse(content)  # all text
     u'Barack Obama III.'
 
-    >>> String(css='.name', quant=1, attr='_name').parse(content)
+    >>> String(css='.name', quant=1, attr='_name').parse(content)  # tag name
     u'span'
-
-    >>> String(css='a', quant='1').parse(content)  # String extracts text content by default
-    u'Link'
 
     >>> Url(css='a', quant='1').parse(content)  # Url extracts href by default
     u'/test'
@@ -440,6 +439,8 @@ namespaces
 ----------
 
 **Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_, `Prefix`_
+
+TODO
 
 
 ====================
