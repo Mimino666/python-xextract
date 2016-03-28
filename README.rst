@@ -39,11 +39,11 @@ Let's parse `The Shawshank Redemption <http://www.imdb.com/title/tt0111161/>`_'s
   # parse like a boss
   >>> from xextract import String, Group
 
-  # use css selector to extract title
+  # extract title with css selector
   >>> String(css='h1[itemprop="name"]', quant=1).parse(response.text)
   u'The Shawshank Redemption'
 
-  # use xpath selector to extract year
+  # extract release year with xpath selector
   >>> String(xpath='//*[@id="titleYear"]/a', quant=1).parse(response.text)
   u'1994'
 
@@ -440,7 +440,27 @@ namespaces
 
 **Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_, `Prefix`_
 
-TODO
+When parsing XML documents containing namespace prefixes, pass the dictionary mapping namespace prefixes to namespace URIs.
+Use then full name for elements in xpath selector in the form ``"prefix:element"``
+
+As for the moment, you **cannot use default namespace** for parsing (see `lxml docs <http://lxml.de/FAQ.html#how-can-i-specify-a-default-namespace-for-xpath-expressions>`_ for more information).  Just use an arbitrary prefix.
+
+Example:
+
+.. code-block:: python
+
+    >>> content = '''<?xml version='1.0' encoding='UTF-8'?>
+    ... <movie xmlns="http://imdb.com/ns/">
+    ...   <title>The Shawshank Redemption</title>
+    ...   <year>1994</year>
+    ... </movie>'''
+    >>> nsmap = {'imdb': 'http://imdb.com/ns/'}  # use arbitrary prefix for default namespace
+
+    >>> Prefix(xpath='//imdb:movie', namespaces=nsmap, children=[  # pass namespaces to the outermost parser
+    ...   String(name='title', xpath='imdb:title', quant=1),
+    ...   String(name='year', xpath='imdb:year', quant=1)
+    ... ]).parse(content)
+    {'title': u'The Shawshank Redemption', 'year': u'1994'}
 
 
 ====================
