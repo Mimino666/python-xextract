@@ -7,7 +7,7 @@ with open('README.rst', 'r') as f:
 
 setup(
     name='xextract',
-    version='0.0.9',
+    version='0.1.0',
     description='Extract structured data from HTML and XML documents like a boss.',
     long_description=readme,
     author='Michal "Mimino" Danilak',
@@ -22,7 +22,7 @@ setup(
     license='MIT',
     zip_safe=False,
     classifiers=(
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Natural Language :: English',
         'License :: OSI Approved :: MIT License',
