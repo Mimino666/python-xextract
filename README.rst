@@ -103,7 +103,7 @@ Example:
     u'Hello !'
 
     >>> String(css='span', quant=1, attr='_all_text').parse('<span>Hello <b>world</b>!</span>')
-    u'Hello world!''
+    u'Hello world!'
 
     >>> String(css='span', quant=1, attr='class').parse('<span class="text-success"></span>')
     u'text-success'
@@ -134,7 +134,7 @@ Example:
 
     >>> Prefix(css='#main', children=[
     ...   Url(css='a', quant=1)
-    ... ]).parse(content, url='http://github.com/Mimino666')  # you can pass url also to ancestor's parse()
+    ... ]).parse(content, url='http://github.com/Mimino666')  # you can pass url also to ancestor's parse(). It will propagate down.
     u'http://github.com/test'
 
 
