@@ -50,6 +50,9 @@ class BaseParser(object):
                     child.namespaces = self.namespaces
                     child._propagate_namespaces()
 
+    def __call__(self, body, url=None):
+        return self.parse(body, url)
+
     def parse(self, body, url=None):
         if isinstance(body, XPathExtractor):
             extractor = body
