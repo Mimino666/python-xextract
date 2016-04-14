@@ -1,6 +1,7 @@
 import copy
 from datetime import datetime
 import unittest
+from urlparse import urlparse
 
 from lxml import etree
 import six
@@ -166,6 +167,13 @@ class TestString(TestBaseNamedParser):
         self.assertEqual(String(name='val', css='span', quant=1, attr='data-val').parse(html)['val'], 'rocks')
         self.assertEqual(String(name='val', css='span', quant=1, attr='data-invalid').parse(html)['val'], '')
 
+    def test_callback(self):
+        html = '<span>1</span><span>2</span>'
+        self.assertListEqual(String(css='span').parse(html), ['1', '2'])
+        self.assertListEqual(String(css='span', callback=int).parse(html), [1, 2])
+        self.assertEqual(String(css='span:first-child', callback=int, quant=1).parse(html), 1)
+        self.assertListEqual(String(css='div', callback=int).parse(html), [])
+
 
 class TestUrl(TestBaseNamedParser):
     parser_class = Url
@@ -179,6 +187,13 @@ class TestUrl(TestBaseNamedParser):
 
         self.assertEqual(Url(name='val', css='a', quant=1, attr='data-val').parse(html)['val'], '/val')
         self.assertEqual(Url(name='val', css='a', quant=1, attr='data-val').parse(html, url='http://example.com/a/b/c')['val'], 'http://example.com/val')
+
+    def test_callback(self):
+        def _parse_scheme(url):
+            return urlparse(url).scheme
+        html = '<a href="/test"></a>'
+        self.assertEqual(Url(css='a', quant=1, callback=_parse_scheme).parse(html), '')
+        self.assertEqual(Url(css='a', quant=1, callback=_parse_scheme).parse(html, url='http://example.com/a/b/c'), 'http')
 
 
 class TestDateTime(TestBaseNamedParser):
@@ -197,6 +212,14 @@ class TestDateTime(TestBaseNamedParser):
 
         # invalid format
         self.assertRaises(ValueError, DateTime(name='val', css='span', quant=1, format='%d').parse, html)
+
+    def test_callback(self):
+        def _parse_day(dt):
+            return dt.day
+        html = '<span>24.11.2015</span>'
+        self.assertEqual(
+            DateTime(css='span', quant=1, format='%d.%m.%Y', callback=_parse_day).parse(html),
+            24)
 
 
 class TestElement(TestBaseNamedParser):

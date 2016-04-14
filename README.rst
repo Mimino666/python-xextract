@@ -44,8 +44,8 @@ Let's parse `The Shawshank Redemption <http://www.imdb.com/title/tt0111161/>`_'s
   u'The Shawshank Redemption'
 
   # extract release year with xpath selector
-  >>> String(xpath='//*[@id="titleYear"]/a', quant=1).parse(response.text)
-  u'1994'
+  >>> String(xpath='//*[@id="titleYear"]/a', quant=1, callback=int).parse(response.text)
+  1994
 
   # extract structured data
   >>> Group(css='.cast_list tr:not(:first-child)', children=[
@@ -84,7 +84,7 @@ Parsers
 String
 ------
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional), `namespaces`_ (optional)
 
 Extract string data from the matched element(s).
 Extracted value is always unicode.
@@ -93,6 +93,8 @@ By default, ``String`` extracts the text content of only the matched element, bu
 To extract and concatenate the text out of every descendant element, use ``attr`` parameter with the special value ``"_all_text"``:
 
 Use ``attr`` parameter to extract the data from an HTML/XML attribute.
+
+Use ``callback`` parameter to post-process extracted values.
 
 Example:
 
@@ -108,16 +110,21 @@ Example:
     >>> String(css='span', quant=1, attr='class').parse('<span class="text-success"></span>')
     u'text-success'
 
+    >>> String(css='span', callback=int).parse('<span>1</span><span>2</span>')
+    [1, 2]
+
 ---
 Url
 ---
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"href"``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"href"``), `callback`_ (optional), `namespaces`_ (optional)
 
 Behaves like ``String`` parser, but with two exceptions:
 
 * default value for ``attr`` parameter is ``"href"``
 * if you pass ``url`` parameter to ``parse()`` method, the absolute url will be constructed and returned
+
+If ``callback`` is specified, it is called *after* the absolute urls are constructed.
 
 Example:
 
@@ -142,11 +149,13 @@ Example:
 DateTime
 --------
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), ``format`` (**required**), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), ``format`` (**required**), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional) `namespaces`_ (optional)
 
 Returns the ``datetime`` object constructed out of the extracted data: ``datetime.strptime(extracted_data, format)``.
 
 ``format`` syntax is described in the `Python documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
+
+If ``callback`` is specified, it is called *after* the datetime objects are constructed.
 
 Example:
 
@@ -407,6 +416,22 @@ Example:
     >>> String(css='a', quant='1', attr='id').parse(content)  # non-existent attributes return empty string
     u''
 
+
+--------
+callback
+--------
+
+**Parsers**: `String`_, `Url`_, `DateTime`_
+
+Provides an easy way to post-process extracted values.
+It should be a functiona that takes a single argument, the extracted value, and returns the postprocessed value.
+
+Example:
+
+.. code-block:: python
+
+    >>> String(css='span', callback=int).parse('<span>1</span><span>2</span>')
+    [1, 2]
 
 --------
 children

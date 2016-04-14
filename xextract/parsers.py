@@ -152,7 +152,7 @@ class Element(BaseNamedParser):
 
 
 class String(BaseNamedParser):
-    def __init__(self, attr='_text', **kwargs):
+    def __init__(self, attr='_text', callback=None, **kwargs):
         super(String, self).__init__(**kwargs)
         if attr == '_text':
             self.attr = 'text()'
@@ -162,13 +162,17 @@ class String(BaseNamedParser):
             self.attr = 'name()'
         else:
             self.attr = '@' + attr
+        self.callback = callback
 
     def _process_named_nodes(self, nodes, context):
         values = []
         for node in nodes:
             value = u''.join(node.select(self.attr).extract())
             values.append(value)
-        return self._process_values(values, context)
+        values = self._process_values(values, context)
+        if self.callback is not None:
+            values = map(self.callback, values)
+        return values
 
     def _process_values(self, values, context):
         return values
