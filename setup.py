@@ -19,6 +19,8 @@ setup(
     package_data={'': ['LICENSE']},
     include_package_data=True,
     install_requires=['lxml', 'cssselect', 'six'],
+    tests_require=['unittest2', ],
+    test_suite='tests',
     license='MIT',
     zip_safe=False,
     classifiers=(
