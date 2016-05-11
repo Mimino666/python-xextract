@@ -97,10 +97,11 @@ class Prefix(BaseParser):
 
 
 class BaseNamedParser(BaseParser):
-    def __init__(self, name=None, quant='*', **kwargs):
+    def __init__(self, name=None, quant='*', callback=None, **kwargs):
         super(BaseNamedParser, self).__init__(**kwargs)
         self.name = name
         self.quantity = Quantity(quant)
+        self.callback = callback
 
     def _process_nodes(self, nodes, context):
         # validate number of nodes
@@ -115,6 +116,8 @@ class BaseNamedParser(BaseParser):
                 (self.__class__.__name__, name_msg, num_nodes, self.quantity.raw_quantity))
 
         values = self._process_named_nodes(nodes, context)
+        if self.callback is not None:
+            values = map(self.callback, values)
         if self.name is None:
             return self._flatten_values(values)
         else:
@@ -152,7 +155,7 @@ class Element(BaseNamedParser):
 
 
 class String(BaseNamedParser):
-    def __init__(self, attr='_text', callback=None, **kwargs):
+    def __init__(self, attr='_text', **kwargs):
         super(String, self).__init__(**kwargs)
         if attr == '_text':
             self.attr = 'text()'
@@ -162,17 +165,13 @@ class String(BaseNamedParser):
             self.attr = 'name()'
         else:
             self.attr = '@' + attr
-        self.callback = callback
 
     def _process_named_nodes(self, nodes, context):
         values = []
         for node in nodes:
             value = u''.join(node.select(self.attr).extract())
             values.append(value)
-        values = self._process_values(values, context)
-        if self.callback is not None:
-            values = map(self.callback, values)
-        return values
+        return self._process_values(values, context)
 
     def _process_values(self, values, context):
         return values

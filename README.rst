@@ -170,9 +170,11 @@ Example:
 Element
 -------
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `callback`_ (optional), `namespaces`_ (optional)
 
 Returns lxml instance (``lxml.etree._Element``) of the matched element(s).
+
+If ``callback`` is specified, it is called with ``lxml.etree._Element`` instance.
 
 Example:
 
@@ -182,17 +184,22 @@ Example:
     >>> Element(css='span', quant=1).parse('<span>Hello</span>')
     <Element span at 0x2ac2990>
 
+    >>> Element(css='span', quant=1, callback=lambda el: el.text).parse('<span>Hello</span>')
+    u'Hello'
+
 
 -----
 Group
 -----
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `children`_ (**required**), `quant`_ (optional, default ``"*"``), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `children`_ (**required**), `quant`_ (optional, default ``"*"``), `callback`_ (optional), `namespaces`_ (optional)
 
 For each element matched by css/xpath selector returns the dictionary containing the data extracted by the parsers listed in ``children`` parameter.
 All parsers listed in ``children`` parameter **must** have ``name`` specified - this is then used as the key in dictionary.
 
 Typical use case for this parser is when you want to parse structured data, e.g. list of user profiles, where each profile contains fields like name, address, etc. Use ``Group`` parser to group the fields of each user profile together.
+
+If ``callback`` is specified, it is called with the dictionary of parsed children values.
 
 Example:
 
@@ -421,10 +428,10 @@ Example:
 callback
 --------
 
-**Parsers**: `String`_, `Url`_, `DateTime`_
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_
 
 Provides an easy way to post-process extracted values.
-It should be a functiona that takes a single argument, the extracted value, and returns the postprocessed value.
+It should be a function that takes a single argument, the extracted value, and returns the postprocessed value.
 
 Example:
 
@@ -432,6 +439,9 @@ Example:
 
     >>> String(css='span', callback=int).parse('<span>1</span><span>2</span>')
     [1, 2]
+
+    >>> Element(css='span', quant=1, callback=lambda el: el.text).parse('<span>Hello</span>')
+    u'Hello'
 
 --------
 children

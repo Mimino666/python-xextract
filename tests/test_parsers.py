@@ -235,26 +235,28 @@ class TestElement(TestBaseNamedParser):
         val = Element(name='val', css='b', quant=1).parse(html)['val']
         self.assertEqual(val.tag, 'b')
 
+    def test_callback(self):
+        html = '<span>Hello <b>world</b>!</span>'
+        val = Element(css='b', quant=1, callback=lambda el: el.text).parse(html)
+        self.assertEqual(val, 'world')
+
 
 class TestGroup(TestBaseNamedParser):
     parser_class = Group
     parser_kwargs = {'name': 'val', 'children': []}
     return_value_type = dict
-
-    def test_basic(self):
-        html = '''
+    html = '''
         <ul>
             <li>
                 <span>Mike</span>
             </li>
-
             <li>
                 <span>John</span>
                 <a href="/test">link</a>
             </li>
-        </ul>
-        '''
+        </ul>'''
 
+    def test_basic(self):
         extracted = {'val': [
             {'name': 'Mike', 'link': None},
             {'name': 'John', 'link': 'http://example.com/test'}]}
@@ -263,21 +265,27 @@ class TestGroup(TestBaseNamedParser):
         val = Group(name='val', css='li', quant=2, children=[
             String(name='name', css='span', quant=1),
             Url(name='link', css='a', quant='?')
-        ]).parse(html, url='http://example.com/')
+        ]).parse(self.html, url='http://example.com/')
         self.assertDictEqual(val, extracted)
 
         # xpath
         val = Group(name='val', css='li', quant=2, children=[
             String(name='name', xpath='span', quant=1),
             Url(name='link', xpath='a', quant='?')
-        ]).parse(html, url='http://example.com/')
+        ]).parse(self.html, url='http://example.com/')
         self.assertDictEqual(val, extracted)
 
         val = Group(name='val', css='li', quant=2, children=[
             String(name='name', xpath='descendant::span', quant=1),
             Url(name='link', xpath='descendant::a', quant='?')
-        ]).parse(html, url='http://example.com/')
+        ]).parse(self.html, url='http://example.com/')
         self.assertDictEqual(val, extracted)
+
+    def test_callback(self):
+        val = Group(css='li', quant=2, callback=lambda d: d['name'], children=[
+            String(name='name', css='span', quant=1),
+        ]).parse(self.html)
+        self.assertListEqual(val, ['Mike', 'John'])
 
 
 class TestPrefix(TestBaseParser):
