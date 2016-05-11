@@ -104,11 +104,16 @@ Example:
     >>> String(css='span', quant=1).parse('<span>Hello <b>world</b>!</span>')
     u'Hello !'
 
+    >>> String(css='span', quant=1, attr='class').parse('<span class="text-success"></span>')
+    u'text-success'
+
+    # use special `attr` value `_all_text` to extract and concantenate text out of all descendants
     >>> String(css='span', quant=1, attr='_all_text').parse('<span>Hello <b>world</b>!</span>')
     u'Hello world!'
 
-    >>> String(css='span', quant=1, attr='class').parse('<span class="text-success"></span>')
-    u'text-success'
+    # use special `attr` value `_name` to extract tag name of the matched element
+    >>> String(css='span', quant=1, attr='_name').parse('<span>hello</span>')
+    u'span'
 
     >>> String(css='span', callback=int).parse('<span>1</span><span>2</span>')
     [1, 2]
@@ -231,11 +236,11 @@ Example:
 
 .. code-block:: python
 
-    # instead of
+    # instead of...
     >>> String(css='#main .name').parse(...)
     >>> String(css='#main .date').parse(...)
 
-    # you can use
+    # ...you can use
     >>> from xextract import Prefix
     >>> Prefix(css='#main', children=[
     ...   String(name="name", css='.name'),
