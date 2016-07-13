@@ -110,7 +110,7 @@ class BaseNamedParser(BaseParser):
             if self.name:
                 name_msg = '(name="%s")' % self.name
             else:
-                name_msg = ''
+                name_msg = '(xpath="%s")' % self.raw_xpath
             raise ParsingError(
                 'Parser %s%s matched %s elements ("%s" expected).' %
                 (self.__class__.__name__, name_msg, num_nodes, self.quantity.raw_quantity))
