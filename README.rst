@@ -178,6 +178,7 @@ Element
 **Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `callback`_ (optional), `namespaces`_ (optional)
 
 Returns lxml instance (``lxml.etree._Element``) of the matched element(s).
+If you use xpath expression and match the text content of the element (e.g. ``text()`` or ``@attr``), unicode is returned.
 
 If ``callback`` is specified, it is called with ``lxml.etree._Element`` instance.
 
@@ -190,6 +191,10 @@ Example:
     <Element span at 0x2ac2990>
 
     >>> Element(css='span', quant=1, callback=lambda el: el.text).parse('<span>Hello</span>')
+    u'Hello'
+
+    # same as above
+    >>> Element(xpath='//span/text()', quant=1).parse('<span>Hello</span>')
     u'Hello'
 
 

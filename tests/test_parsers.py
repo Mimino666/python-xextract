@@ -240,6 +240,15 @@ class TestElement(TestBaseNamedParser):
         val = Element(css='b', quant=1, callback=lambda el: el.text).parse(html)
         self.assertEqual(val, 'world')
 
+    def test_text_extract(self):
+        html = '<span>Hello<br> world<b> nothing to see </b>!</span>'
+        val = Element(xpath='//span/text()').parse(html)
+        self.assertListEqual(val, ['Hello', ' world', '!'])
+
+        html = '<span class="nice"></span>'
+        val = Element(xpath='//span/@class', quant=1).parse(html)
+        self.assertEqual(val, 'nice')
+
 
 class TestGroup(TestBaseNamedParser):
     parser_class = Group
