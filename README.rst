@@ -156,7 +156,7 @@ DateTime
 
 **Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), ``format`` (**required**), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional) `namespaces`_ (optional)
 
-Returns the ``datetime`` object constructed out of the extracted data: ``datetime.strptime(extracted_data, format)``.
+Returns the ``datetime.datetime`` object constructed out of the extracted data: ``datetime.strptime(extracted_data, format)``.
 
 ``format`` syntax is described in the `Python documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
 
@@ -167,8 +167,29 @@ Example:
 .. code-block:: python
 
     >>> from xextract import DateTime
-    >>> DateTime(css='span', quant=1, format='%d.%m.%Y').parse('<span>24.12.2015</span>')
-    datetime.datetime(2015, 12, 24, 0, 0)
+    >>> DateTime(css='span', quant=1, format='%d.%m.%Y %H:%M').parse('<span>24.12.2015 5:30</span>')
+    datetime.datetime(2015, 12, 24, 50, 30)
+
+
+----
+Date
+----
+
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), ``format`` (**required**), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional) `namespaces`_ (optional)
+
+Returns the ``datetime.date`` object constructed out of the extracted data: ``datetime.strptime(extracted_data, format).date()``.
+
+``format`` syntax is described in the `Python documentation <https://docs.python.org/2/library/datetime.html#strftime-strptime-behavior>`_.
+
+If ``callback`` is specified, it is called *after* the datetime objects are constructed.
+
+Example:
+
+.. code-block:: python
+
+    >>> from xextract import Date
+    >>> Date(css='span', quant=1, format='%d.%m.%Y').parse('<span>24.12.2015</span>')
+    datetime.date(2015, 12, 24)
 
 
 -------
@@ -261,7 +282,7 @@ Parser parameters
 name
 ----
 
-**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Date`_, `Element`_, `Group`_
 
 **Default value**: ``None``
 
@@ -287,7 +308,7 @@ Example:
 css / xpath
 -----------
 
-**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_, `Prefix`_
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Date`_, `Element`_, `Group`_, `Prefix`_
 
 **Default value (xpath)**: ``"self::*"``
 
@@ -317,7 +338,7 @@ Example:
 quant
 -----
 
-**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Date`_, `Element`_, `Group`_
 
 **Default value**: ``"*"``
 
@@ -385,7 +406,7 @@ Example:
 attr
 ----
 
-**Parsers**: `String`_, `Url`_, `DateTime`_
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Date`_
 
 **Default value**: ``"href"`` for ``Url`` parser. ``"_text"`` otherwise.
 
@@ -438,7 +459,7 @@ Example:
 callback
 --------
 
-**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Date`_, `Element`_, `Group`_
 
 Provides an easy way to post-process extracted values.
 It should be a function that takes a single argument, the extracted value, and returns the postprocessed value.
@@ -483,7 +504,7 @@ Example:
 namespaces
 ----------
 
-**Parsers**: `String`_, `Url`_, `DateTime`_, `Element`_, `Group`_, `Prefix`_
+**Parsers**: `String`_, `Url`_, `DateTime`_, `Date`_, `Element`_, `Group`_, `Prefix`_
 
 When parsing XML documents containing namespace prefixes, pass the dictionary mapping namespace prefixes to namespace URIs.
 Use then full name for elements in xpath selector in the form ``"prefix:element"``

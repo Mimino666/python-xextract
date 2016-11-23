@@ -197,3 +197,9 @@ class DateTime(String):
 
     def _process_values(self, values, context):
         return [datetime.strptime(v, self.format) for v in values]
+
+
+class Date(DateTime):
+    def _process_values(self, values, context):
+        values = super(Date, self)._process_values(values, context)
+        return [v.date() for v in values]

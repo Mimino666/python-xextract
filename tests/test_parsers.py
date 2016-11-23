@@ -1,5 +1,5 @@
 import copy
-from datetime import datetime
+from datetime import datetime, date
 import unittest
 from urlparse import urlparse
 
@@ -7,7 +7,7 @@ from lxml import etree
 import six
 
 from xextract.parsers import (ParserError, ParsingError, BaseParser,
-    BaseNamedParser, Prefix, Group, Element, String, Url, DateTime)
+    BaseNamedParser, Prefix, Group, Element, String, Url, DateTime, Date)
 
 
 class TestBuild(unittest.TestCase):
@@ -198,14 +198,14 @@ class TestUrl(TestBaseNamedParser):
 
 class TestDateTime(TestBaseNamedParser):
     parser_class = DateTime
-    parser_kwargs = {'name': 'val', 'format': '%d.%m.%Y'}
+    parser_kwargs = {'name': 'val', 'format': '%d.%m.%Y %H:%M'}
     return_value_type = datetime
-    html = '''<ul><li>1.1.2001</li><li>2.1.2001</li>20.3.2002</ul>'''
+    html = '''<ul><li>1.1.2001 22:14</li><li>2.1.2001 12:12</li>20.3.2002 0:0</ul>'''
 
     def test_basic(self):
-        html = '<span data-val="1.1.2001">24.11.2015</span>'
-        val = DateTime(name='val', css='span', quant=1, format='%d.%m.%Y').parse(html)['val']
-        self.assertEqual(val, datetime(year=2015, month=11, day=24))
+        html = '<span data-val="1.1.2001">24.11.2015 10:12</span>'
+        val = DateTime(name='val', css='span', quant=1, format='%d.%m.%Y %H:%M').parse(html)['val']
+        self.assertEqual(val, datetime(year=2015, month=11, day=24, hour=10, minute=12))
 
         val = DateTime(name='val', css='span', quant=1, format='%d.%m.%Y', attr='data-val').parse(html)['val']
         self.assertEqual(val, datetime(year=2001, month=1, day=1))
@@ -214,11 +214,37 @@ class TestDateTime(TestBaseNamedParser):
         self.assertRaises(ValueError, DateTime(name='val', css='span', quant=1, format='%d').parse, html)
 
     def test_callback(self):
-        def _parse_day(dt):
+        def _get_day(dt):
             return dt.day
         html = '<span>24.11.2015</span>'
         self.assertEqual(
-            DateTime(css='span', quant=1, format='%d.%m.%Y', callback=_parse_day).parse(html),
+            DateTime(css='span', quant=1, format='%d.%m.%Y', callback=_get_day).parse(html),
+            24)
+
+
+class TestDate(TestBaseNamedParser):
+    parser_class = Date
+    parser_kwargs = {'name': 'val', 'format': '%d.%m.%Y'}
+    return_value_type = date
+    html = '''<ul><li>1.1.2001</li><li>2.1.2001</li>20.3.2002</ul>'''
+
+    def test_basic(self):
+        html = '<span data-val="1.1.2001">24.11.2015</span>'
+        val = Date(name='val', css='span', quant=1, format='%d.%m.%Y').parse(html)['val']
+        self.assertEqual(val, date(year=2015, month=11, day=24))
+
+        val = Date(name='val', css='span', quant=1, format='%d.%m.%Y', attr='data-val').parse(html)['val']
+        self.assertEqual(val, date(year=2001, month=1, day=1))
+
+        # invalid format
+        self.assertRaises(ValueError, Date(name='val', css='span', quant=1, format='%d').parse, html)
+
+    def test_callback(self):
+        def _get_day(dt):
+            return dt.day
+        html = '<span>24.11.2015</span>'
+        self.assertEqual(
+            Date(css='span', quant=1, format='%d.%m.%Y', callback=_get_day).parse(html),
             24)
 
 
