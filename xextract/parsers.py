@@ -9,7 +9,7 @@ from .quantity import Quantity
 
 
 __all__ = ['ParserError', 'ParsingError',
-           'Prefix', 'Group', 'Element', 'String', 'Url', 'DateTime']
+           'Prefix', 'Group', 'Element', 'String', 'Url', 'DateTime', 'Date']
 
 
 class ParserError(Exception):
