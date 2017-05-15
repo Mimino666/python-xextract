@@ -17,9 +17,7 @@ class Quantity(object):
     def __init__(self, quantity='*'):
         self.raw_quantity = quantity
         self.lower = self.upper = 0  # lower and upper bounds on quantity
-        self._check_quantity = self._parse_quantity(quantity)
-        if self._check_quantity is None:
-            raise ValueError('Invalid quantity: "%s"' % repr(quantity))
+        self._check_quantity_func = self._parse_quantity(quantity)
 
     def check_quantity(self, n):
         '''Return True, if `n` matches the specified quantity.
@@ -27,7 +25,7 @@ class Quantity(object):
         if not isinstance(n, six.integer_types):
             raise ValueError('Invalid argument for "check_quantity()".'
                 'Integer expected, %s received: "%s"' % (type(n), n))
-        return self._check_quantity(n)
+        return self._check_quantity_func(n)
 
     def _check_star(self, n):
         return n >= 0
@@ -36,7 +34,7 @@ class Quantity(object):
         return n >= 1
 
     def _check_question_mark(self, n):
-        return 0 <= n <= 1
+        return n == 0 or n == 1
 
     def _check_1d(self, n):
         return n == self.upper
@@ -56,7 +54,7 @@ class Quantity(object):
         '''If `quantity` represents a valid quantity expression, return the
         method that checks for the specified quantity.
 
-        Otherwise return None.
+        Otherwise raise ValueError.
         '''
         # quantity is specified as a single integer
         if isinstance(quantity, six.integer_types):
@@ -64,7 +62,7 @@ class Quantity(object):
             if 0 <= self.upper:
                 return self._check_1d
             else:
-                return None
+                raise ValueError('Invalid quantity: "%s"' % repr(quantity))
 
         # quantity is specified as a pair of integers
         if isinstance(quantity, (list, tuple)) and len(quantity) == 2:
@@ -74,7 +72,7 @@ class Quantity(object):
                     0 <= self.lower <= self.upper):
                 return self._check_2d
             else:
-                return None
+                raise ValueError('Invalid quantity: "%s"' % repr(quantity))
 
         # quantity is specified as a string
         if isinstance(quantity, six.string_types):
@@ -89,13 +87,13 @@ class Quantity(object):
                     if self.lower <= self.upper:
                         return getattr(self, check_funcname)
                     else:
-                        return None
+                        raise ValueError('Invalid quantity: "%s"' % repr(quantity))
 
         # quantity is of a bad type
-        return None
+        raise ValueError('Invalid quantity: "%s"' % repr(quantity))
 
     @property
     def is_single(self):
         '''True, if the quantity represents a single element.'''
-        return (self._check_quantity == self._check_question_mark or
-            (self._check_quantity == self._check_1d and self.upper <= 1))
+        return (self._check_quantity_func == self._check_question_mark or
+            (self._check_quantity_func == self._check_1d and self.upper <= 1))

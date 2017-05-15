@@ -11,7 +11,7 @@ class TestQuantity(unittest.TestCase):
             (1,2), (0,0)]
         for g in good:
             quantity = Quantity(g)
-            self.assertIsNotNone(quantity._check_quantity)
+            self.assertIsNotNone(quantity._check_quantity_func)
 
         bad = ['', None, ' * * ', '+*', '  ', '1 2', '1,2,3', '+2', '-2', '3,2', 1.0,
                 -1, (3,2), (-1,5)]
