@@ -26,12 +26,14 @@ class BaseParser(object):
     def __init__(self, css=None, xpath=None, namespaces=None, children=None):
         if xpath and css:
             raise ParserError('At most one of "xpath" or "css" attributes can be specified.')
+
         if xpath:
             self.raw_xpath = xpath
         elif css:
             self.raw_xpath = GenericTranslator().css_to_xpath(css)
         else:
             self.raw_xpath = 'self::*'
+
         self._compiled_xpath = None  # compile xpath lazily
         self.namespaces = namespaces
         self.children = children
@@ -185,9 +187,9 @@ class Url(String):
     def _process_values(self, values, context):
         url = context.get('url')
         if url:
-            return [urlparse.urljoin(url, v) for v in values]
+            return [urlparse.urljoin(url, v.strip()) for v in values]
         else:
-            return values
+            return [v.strip() for v in values]
 
 
 class DateTime(String):
