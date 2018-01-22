@@ -100,6 +100,11 @@ class ChildrenParserMixin(object):
 
 
 class Prefix(ChildrenParserMixin, BaseParser):
+    '''
+    This parser doesn't actually parse any data on its own.
+    Instead you can use it, when many of your parsers share the same css/xpath selector prefix.
+    '''
+
     def __init__(self, **kwargs):
         self.callback = kwargs.pop('callback', None)
         super(Prefix, self).__init__(**kwargs)
@@ -155,6 +160,14 @@ class BaseNamedParser(BaseParser):
 
 
 class Group(ChildrenParserMixin, BaseNamedParser):
+    '''
+    For each element matched by css/xpath selector returns the dictionary
+    containing the data extracted by the parsers listed in children parameter.
+
+    All parsers listed in `children` parameter must have `name` specified -
+    this is then used as the key in dictionary.
+    '''
+
     def _process_named_nodes(self, nodes, context):
         values = []
         for node in nodes:
@@ -166,11 +179,26 @@ class Group(ChildrenParserMixin, BaseNamedParser):
 
 
 class Element(BaseNamedParser):
+    '''
+    Returns lxml instance (`lxml.etree._Element`) of the matched element(s).
+
+    If you use xpath expression and match the text content of the element
+    (e.g. `text()` or `@attr`), unicode is returned.
+    '''
+
     def _process_named_nodes(self, nodes, context):
         return [node._root for node in nodes]
 
 
 class String(BaseNamedParser):
+    '''
+    Extract string data from the matched element(s). Extracted value is always unicode.
+
+    By default, `String` extracts the text content of only the matched element,
+    but not its descendants. To extract and concatenate the text out of every
+    descendant element, use `attr` parameter with the special value "_all_text"
+    '''
+
     def __init__(self, attr='_text', **kwargs):
         super(String, self).__init__(**kwargs)
         if attr == '_text':
@@ -194,6 +222,14 @@ class String(BaseNamedParser):
 
 
 class Url(String):
+    '''
+    Behaves like `String` parser, but with two exceptions:
+        - default value for `attr` parameter is "href"
+        - if you pass `url` parameter to parse() method, the absolute url will be constructed and returned
+
+    If callback is specified, it is called after the absolute urls are constructed.
+    '''
+
     def __init__(self, **kwargs):
         kwargs.setdefault('attr', 'href')
         super(Url, self).__init__(**kwargs)
@@ -207,6 +243,11 @@ class Url(String):
 
 
 class DateTime(String):
+    '''
+    Returns the `datetime.datetime` object constructed out of the extracted data:
+        `datetime.strptime(extracted_data, format)`
+    '''
+
     def __init__(self, format, **kwargs):
         super(DateTime, self).__init__(**kwargs)
         self.format = format
@@ -216,6 +257,11 @@ class DateTime(String):
 
 
 class Date(DateTime):
+    '''
+    Returns the `datetime.date` object constructed out of the extracted data:
+        `datetime.strptime(extracted_data, format).date()`
+    '''
+
     def _process_values(self, values, context):
         values = super(Date, self)._process_values(values, context)
         return [v.date() for v in values]
