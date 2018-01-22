@@ -326,9 +326,7 @@ class TestGroup(TestBaseNamedParser):
 class TestPrefix(TestBaseParser):
     parser_class = Prefix
     parser_kwargs = {'children': []}
-
-    def test_basic(self):
-        html = '''
+    html = '''
         <ul>
             <li>
                 <span>Mike</span>
@@ -338,16 +336,23 @@ class TestPrefix(TestBaseParser):
                 <span>John</span>
             </li>
         </ul>
-        '''
+    '''
 
+    def test_basic(self):
         # css
         val = Prefix(css='li', children=[
             String(name='name', css='span', quant=2)
-        ]).parse(html)
+        ]).parse(self.html)
         self.assertDictEqual(val, {'name': ['Mike', 'John']})
 
         # xpath
         val = Prefix(xpath='//li', children=[
             String(name='name', xpath='span', quant=2)
-        ]).parse(html)
+        ]).parse(self.html)
         self.assertDictEqual(val, {'name': ['Mike', 'John']})
+
+    def test_callback(self):
+        val = Prefix(xpath='//li', callback=lambda d: d['name'], children=[
+            String(name='name', css='span', quant=2),
+        ]).parse(self.html)
+        self.assertListEqual(val, ['Mike', 'John'])
