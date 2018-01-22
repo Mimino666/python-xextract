@@ -23,7 +23,7 @@ class ParsingError(Exception):
 
 
 class BaseParser(object):
-    def __init__(self, css=None, xpath=None, namespaces=None, children=None):
+    def __init__(self, css=None, xpath=None, namespaces=None):
         if xpath and css:
             raise ParserError('At most one of "xpath" or "css" attributes can be specified.')
 
@@ -34,23 +34,8 @@ class BaseParser(object):
         else:
             self.raw_xpath = 'self::*'
 
-        self._compiled_xpath = None  # compile xpath lazily
         self.namespaces = namespaces
-        self.children = children
-        # ensure that all children elements inherited from BaseNamedParser have names
-        if self.children:
-            for child in self.children:
-                if isinstance(child, BaseNamedParser) and child.name is None:
-                    raise ParserError('Children elements inherited from BaseNamedParser should have "name" specified.')
-        self._propagate_namespaces()
-
-    def _propagate_namespaces(self):
-        '''Propagate namespaces to children elements.'''
-        if self.namespaces and self.children:
-            for child in self.children:
-                if not child.namespaces:
-                    child.namespaces = self.namespaces
-                    child._propagate_namespaces()
+        self._compiled_xpath = None  # compile xpath lazily
 
     def __call__(self, body, url=None):
         return self.parse(body, url)
@@ -63,12 +48,15 @@ class BaseParser(object):
                 extractor = XmlXPathExtractor(body)
             else:
                 extractor = HtmlXPathExtractor(body)
+
         return self._parse(extractor, {'url': url})
 
     def parse_html(self, body, url=None):
+        '''Force `etree.HTMLParser`.'''
         return self._parse(HtmlXPathExtractor(body), {'url': url})
 
     def parse_xml(self, body, url=None):
+        '''Force `etree.XMLParser`.'''
         return self._parse(XmlXPathExtractor(body), {'url': url})
 
     def _parse(self, extractor, context):
@@ -85,13 +73,36 @@ class BaseParser(object):
         return self._compiled_xpath
 
 
-class Prefix(BaseParser):
+def propagate_namespaces(parser):
+    '''Recursively propagate namespaces to children parsers.'''
+    if parser.namespaces and hasattr(parser, 'children'):
+        for child in parser.children:
+            if not child.namespaces:
+                child.namespaces = parser.namespaces
+                propagate_namespaces(child)
+
+
+class ChildrenParserMixin(object):
+    def __init__(self, **kwargs):
+        self.children = kwargs.pop('children', None)
+        if self.children is None:
+            raise ParserError('You must specify "children" for %s parser.' % self.__class__.__name__)
+
+        super(ChildrenParserMixin, self).__init__(**kwargs)
+
+        # ensure that all children elements inherited from BaseNamedParser have names
+        for child in self.children:
+            if isinstance(child, BaseNamedParser) and child.name is None:
+                raise ParserError('Children elements inherited from BaseNamedParser should have "name" specified.')
+
+        # propagate namespaces to children parsers
+        propagate_namespaces(self)
+
+
+class Prefix(ChildrenParserMixin, BaseParser):
     def __init__(self, **kwargs):
         self.callback = kwargs.pop('callback', None)
-
         super(Prefix, self).__init__(**kwargs)
-        if self.children is None:
-            raise ParserError('You must specify "children" for Prefix parser.')
 
     def _process_nodes(self, nodes, context):
         parsed_data = {}
@@ -124,8 +135,10 @@ class BaseNamedParser(BaseParser):
                 (self.__class__.__name__, name_msg, num_nodes, self.quantity.raw_quantity))
 
         values = self._process_named_nodes(nodes, context)
+
         if self.callback is not None:
             values = map(self.callback, values)
+
         if self.name is None:
             return self._flatten_values(values)
         else:
@@ -141,12 +154,7 @@ class BaseNamedParser(BaseParser):
             return values
 
 
-class Group(BaseNamedParser):
-    def __init__(self, **kwargs):
-        super(Group, self).__init__(**kwargs)
-        if self.children is None:
-            raise ParserError('You must specify "children" for Group parser.')
-
+class Group(ChildrenParserMixin, BaseNamedParser):
     def _process_named_nodes(self, nodes, context):
         values = []
         for node in nodes:
