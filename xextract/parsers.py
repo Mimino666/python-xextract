@@ -87,6 +87,8 @@ class BaseParser(object):
 
 class Prefix(BaseParser):
     def __init__(self, **kwargs):
+        self.callback = kwargs.pop('callback', None)
+
         super(Prefix, self).__init__(**kwargs)
         if self.children is None:
             raise ParserError('You must specify "children" for Prefix parser.')
@@ -95,6 +97,10 @@ class Prefix(BaseParser):
         parsed_data = {}
         for child in self.children:
             parsed_data.update(child._parse(nodes, context))
+
+        if self.callback is not None:
+            parsed_data = self.callback(parsed_data)
+
         return parsed_data
 
 
