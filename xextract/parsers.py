@@ -1,5 +1,11 @@
 from datetime import datetime
-import urlparse
+
+try:
+    # Python < 3
+    import urlparse as urlsparser
+except:
+    # Python >= 3
+    import urllib.parse as urlsparser
 
 from cssselect import GenericTranslator
 from lxml import etree
@@ -237,7 +243,7 @@ class Url(String):
     def _process_values(self, values, context):
         url = context.get('url')
         if url:
-            return [urlparse.urljoin(url, v.strip()) for v in values]
+            return [urlsparser.urljoin(url, v.strip()) for v in values]
         else:
             return [v.strip() for v in values]
 
