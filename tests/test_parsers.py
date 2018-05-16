@@ -1,7 +1,10 @@
 import copy
 from datetime import datetime, date
 import unittest
-from urlparse import urlparse
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 
 from lxml import etree
 import six
@@ -190,7 +193,7 @@ class TestUrl(TestBaseNamedParser):
 
     def test_callback(self):
         def _parse_scheme(url):
-            return urlparse(url).scheme
+            return urlparse.urlparse(url).scheme
         html = '<a href="/test"></a>'
         self.assertEqual(Url(css='a', quant=1, callback=_parse_scheme).parse(html), '')
         self.assertEqual(Url(css='a', quant=1, callback=_parse_scheme).parse(html, url='http://example.com/a/b/c'), 'http')

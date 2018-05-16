@@ -1,4 +1,5 @@
 import unittest
+import six
 
 from xextract.extractors.lxml_extractor import XPathExtractor, XmlXPathExtractor, HtmlXPathExtractor
 
@@ -77,11 +78,11 @@ class TestXpathExtractor(unittest.TestCase):
 
         x = self.hxs_cls(text)
         divtwo = x.select('//div[@class="two"]')
-        self.assertEqual(map(unicode.strip, divtwo.select('//li').extract()),
+        self.assertEqual(list(map(six.text_type.strip, divtwo.select('//li').extract())),
                          ['<li>one</li>', '<li>two</li>', '<li>four</li>', '<li>five</li>', '<li>six</li>'])
-        self.assertEqual(map(unicode.strip, divtwo.select('./ul/li').extract()),
+        self.assertEqual(list(map(six.text_type.strip, divtwo.select('./ul/li').extract())),
                          ['<li>four</li>', '<li>five</li>', '<li>six</li>'])
-        self.assertEqual(map(unicode.strip, divtwo.select('.//li').extract()),
+        self.assertEqual(list(map(six.text_type.strip, divtwo.select('.//li').extract())),
                          ['<li>four</li>', '<li>five</li>', '<li>six</li>'])
         self.assertEqual(divtwo.select('./li').extract(),
                          [])
