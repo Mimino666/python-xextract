@@ -1,5 +1,9 @@
 from datetime import datetime
-import urlparse
+
+try:
+    import urlparse
+except ImportError:
+    import urllib.parse as urlparse
 
 from cssselect import GenericTranslator
 from lxml import etree
@@ -142,7 +146,7 @@ class BaseNamedParser(BaseParser):
         values = self._process_named_nodes(nodes, context)
 
         if self.callback is not None:
-            values = map(self.callback, values)
+            values = [self.callback(x) for x in values]
 
         if self.name is None:
             return self._flatten_values(values)
