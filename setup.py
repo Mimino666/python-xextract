@@ -7,9 +7,10 @@ with open('README.rst', 'r') as f:
 
 setup(
     name='xextract',
-    version='0.1.5',
+    version='0.1.6',
     description='Extract structured data from HTML and XML documents like a boss.',
     long_description=readme,
+    long_description_content_type='text/x-rst',
     author='Michal "Mimino" Danilak',
     author_email='michal.danilak@gmail.com',
     url='https://github.com/Mimino666/python-xextract',
