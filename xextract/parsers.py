@@ -18,12 +18,10 @@ __all__ = ['ParserError', 'ParsingError',
 
 class ParserError(Exception):
     '''Parser is badly initialized.'''
-    pass
 
 
 class ParsingError(Exception):
     '''Numebr of parsed elements doesn't match the expected quantity.'''
-    pass
 
 
 class BaseParser(object):
@@ -79,6 +77,7 @@ class BaseParser(object):
 
 def propagate_namespaces(parser):
     '''Recursively propagate namespaces to children parsers.'''
+
     if parser.namespaces and hasattr(parser, 'children'):
         for child in parser.children:
             if not child.namespaces:

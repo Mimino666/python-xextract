@@ -17,7 +17,7 @@ class XPathExtractor(object):
 
     def _get_root(self, body, encoding=None):
         body = body.strip() or self._empty_doc
-        if isinstance(body, six.string_types):
+        if isinstance(body, six.text_type):
             body = body.encode('utf-8')
             encoding = 'utf-8'
         parser = self._parser(recover=True, encoding=encoding)
