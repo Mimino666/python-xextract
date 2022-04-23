@@ -1,7 +1,5 @@
 import re
 
-import six
-
 
 class Quantity(object):
     '''
@@ -12,7 +10,7 @@ class Quantity(object):
         * - zero or more items
         + - one or more items
         ? - zero or one item
-        num - specified number of items (0 <= num)
+        count - specified number of items (0 <= count)
         lower, upper - number of items in interval [lower, upper] (0 <= lower <= upper).
     '''
 
@@ -22,10 +20,11 @@ class Quantity(object):
         self._check_quantity_func = self._parse_quantity(quantity)
 
     def check_quantity(self, n):
-        '''Return True, if `n` matches the specified quantity.
-        '''
-        if not isinstance(n, six.integer_types):
-            raise ValueError('Invalid argument for "check_quantity()".'
+        '''Return True, if `n` matches the specified quantity.'''
+
+        if not isinstance(n, int):
+            raise ValueError(
+                'Invalid argument for "check_quantity()". '
                 'Integer expected, %s received: "%s"' % (type(n), n))
         return self._check_quantity_func(n)
 
@@ -61,7 +60,7 @@ class Quantity(object):
         '''
 
         # quantity is specified as a single integer
-        if isinstance(quantity, six.integer_types):
+        if isinstance(quantity, int):
             self.upper = quantity
             if 0 <= self.upper:
                 return self._check_1d
@@ -71,15 +70,15 @@ class Quantity(object):
         # quantity is specified as a pair of integers
         if isinstance(quantity, (list, tuple)) and len(quantity) == 2:
             self.lower, self.upper = quantity
-            if (isinstance(self.lower, six.integer_types) and
-                    isinstance(self.upper, six.integer_types) and
+            if (isinstance(self.lower, int) and
+                    isinstance(self.upper, int) and
                     0 <= self.lower <= self.upper):
                 return self._check_2d
             else:
                 raise ValueError('Invalid quantity: "%s"' % repr(quantity))
 
         # quantity is specified as a string
-        if isinstance(quantity, six.string_types):
+        if isinstance(quantity, str):
             for parser, check_funcname in self._quantity_parsers:
                 match = parser.search(quantity)
                 if match:

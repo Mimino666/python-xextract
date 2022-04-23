@@ -1,31 +1,28 @@
-import copy
 from datetime import datetime, date
+from urllib.parse import urlparse
+import copy
 import unittest
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
 
 from lxml import etree
-import six
 
-from xextract.parsers import (ParserError, ParsingError, BaseParser,
-    BaseNamedParser, Prefix, Group, Element, String, Url, DateTime, Date)
+from xextract.parsers import (
+    ParserError, ParsingError, BaseParser, BaseNamedParser,
+    Prefix, Group, Element, String, Url, DateTime, Date)
 
 
 class TestBuild(unittest.TestCase):
     def test_build(self):
         # missing children for Group / Prefix parsers
-        self.assertRaisesRegexp(ParserError, r'You must specify "children" for Prefix parser', Prefix)
-        self.assertRaisesRegexp(ParserError, r'You must specify "children" for Group parser', Group)
+        self.assertRaisesRegex(ParserError, r'You must specify "children" for Prefix parser', Prefix)
+        self.assertRaisesRegex(ParserError, r'You must specify "children" for Group parser', Group)
         # missing name of children elements
-        self.assertRaisesRegexp(ParserError, r'Children elements inherited from BaseNamedParser',
+        self.assertRaisesRegex(ParserError, r'Children elements inherited from BaseNamedParser',
             lambda: Prefix(children=[String()]))
-        self.assertRaisesRegexp(ParserError, r'Children elements inherited from BaseNamedParser',
+        self.assertRaisesRegex(ParserError, r'Children elements inherited from BaseNamedParser',
             lambda: Group(children=[String()]))
-        self.assertRaisesRegexp(ParserError, r'Children elements inherited from BaseNamedParser',
+        self.assertRaisesRegex(ParserError, r'Children elements inherited from BaseNamedParser',
             lambda: Prefix(children=[Prefix(children=[String()])]))
-        self.assertRaisesRegexp(ParserError, r'Children elements inherited from BaseNamedParser',
+        self.assertRaisesRegex(ParserError, r'Children elements inherited from BaseNamedParser',
             lambda: Prefix(children=[Group(name='x', children=[String()])]))
 
 
@@ -112,7 +109,7 @@ class MockNamedParser(BaseNamedParser):
 class TestBaseNamedParser(TestBaseParser):
     parser_class = MockNamedParser
     parser_kwargs = {'name': 'val'}
-    return_value_type = six.text_type
+    return_value_type = str
 
     html = '''
     <ul>
@@ -125,7 +122,7 @@ class TestBaseNamedParser(TestBaseParser):
         self.assertRaises(ParsingError, self.parser_class(css='li', quant=0, **self.parser_kwargs).parse, self.html)
         self.assertRaises(ParsingError, self.parser_class(css='li', quant=1, **self.parser_kwargs).parse, self.html)
         self.assertRaises(ParsingError, self.parser_class(css='ul', quant=2, **self.parser_kwargs).parse, self.html)
-        self.assertRaises(ParsingError, self.parser_class(css='ul', quant=(2,3), **self.parser_kwargs).parse, self.html)
+        self.assertRaises(ParsingError, self.parser_class(css='ul', quant=(2, 3), **self.parser_kwargs).parse, self.html)
         self.assertRaises(ParsingError, self.parser_class(css='li', quant='?', **self.parser_kwargs).parse, self.html)
         self.assertRaises(ParsingError, self.parser_class(css='ol', quant='+', **self.parser_kwargs).parse, self.html)
 
@@ -193,7 +190,7 @@ class TestUrl(TestBaseNamedParser):
 
     def test_callback(self):
         def _parse_scheme(url):
-            return urlparse.urlparse(url).scheme
+            return urlparse(url).scheme
         html = '<a href="/test"></a>'
         self.assertEqual(Url(css='a', quant=1, callback=_parse_scheme).parse(html), '')
         self.assertEqual(Url(css='a', quant=1, callback=_parse_scheme).parse(html, url='http://example.com/a/b/c'), 'http')

@@ -1,9 +1,5 @@
 from datetime import datetime
-
-try:
-    import urlparse
-except ImportError:
-    import urllib.parse as urlparse
+from urllib.parse import urljoin
 
 from cssselect import GenericTranslator
 from lxml import etree
@@ -216,7 +212,7 @@ class String(BaseNamedParser):
     def _process_named_nodes(self, nodes, context):
         values = []
         for node in nodes:
-            value = u''.join(node.select(self.attr).extract())
+            value = ''.join(node.select(self.attr).extract())
             values.append(value)
         return self._process_values(values, context)
 
@@ -240,7 +236,7 @@ class Url(String):
     def _process_values(self, values, context):
         url = context.get('url')
         if url:
-            return [urlparse.urljoin(url, v.strip()) for v in values]
+            return [urljoin(url, v.strip()) for v in values]
         else:
             return [v.strip() for v in values]
 

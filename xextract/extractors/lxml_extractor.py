@@ -1,5 +1,4 @@
 from lxml import etree
-import six
 
 from .extractor_list import XPathExtractorList
 
@@ -17,7 +16,7 @@ class XPathExtractor(object):
 
     def _get_root(self, body, encoding=None):
         body = body.strip() or self._empty_doc
-        if isinstance(body, six.text_type):
+        if isinstance(body, str):
             body = body.encode('utf-8')
             encoding = 'utf-8'
         parser = self._parser(recover=True, encoding=encoding)
@@ -40,14 +39,14 @@ class XPathExtractor(object):
     def extract(self):
         try:
             return etree.tostring(self._root, method=self._tostring_method,
-                                  encoding=six.text_type, with_tail=False)
+                                  encoding=str, with_tail=False)
         except (AttributeError, TypeError):
             if self._root is True:
-                return u'1'
+                return '1'
             elif self._root is False:
-                return u'0'
+                return '0'
             else:
-                return six.text_type(self._root)
+                return str(self._root)
 
     def register_namespace(self, prefix, uri):
         if self.namespaces is None:

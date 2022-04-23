@@ -41,7 +41,7 @@ Let's parse `The Shawshank Redemption <http://www.imdb.com/title/tt0111161/>`_'s
 
   # extract title with css selector
   >>> String(css='h1[itemprop="name"]', quant=1).parse(response.text)
-  u'The Shawshank Redemption'
+  'The Shawshank Redemption'
 
   # extract release year with xpath selector
   >>> String(xpath='//*[@id="titleYear"]/a', quant=1, callback=int).parse(response.text)
@@ -53,8 +53,8 @@ Let's parse `The Shawshank Redemption <http://www.imdb.com/title/tt0111161/>`_'s
   ...   String(name='character', css='.character', attr='_all_text', quant=1)
   ... ]).parse(response.text)
   [
-   {'name': u'Tim Robbins', 'character': u'Andy Dufresne'},
-   {'name': u'Morgan Freeman', 'character': u"Ellis Boyd 'Red' Redding"},
+   {'name': 'Tim Robbins', 'character': 'Andy Dufresne'},
+   {'name': 'Morgan Freeman', 'character': "Ellis Boyd 'Red' Redding"},
    ...
   ]
 
@@ -69,9 +69,9 @@ To install **xextract**, simply run:
 
     $ pip install xextract
 
-Requirements: six, lxml, cssselect
+Requirements: lxml, cssselect
 
-Supported Python versions are 2.6, 2.7, 3.x.
+Supported Python versions are 3.5 - 3.11.
 
 Windows users can download lxml binary `here <http://www.lfd.uci.edu/~gohlke/pythonlibs/#lxml>`_.
 
@@ -102,18 +102,18 @@ Example:
 
     >>> from xextract import String
     >>> String(css='span', quant=1).parse('<span>Hello <b>world</b>!</span>')
-    u'Hello !'
+    'Hello !'
 
     >>> String(css='span', quant=1, attr='class').parse('<span class="text-success"></span>')
-    u'text-success'
+    'text-success'
 
     # use special `attr` value `_all_text` to extract and concantenate text out of all descendants
     >>> String(css='span', quant=1, attr='_all_text').parse('<span>Hello <b>world</b>!</span>')
-    u'Hello world!'
+    'Hello world!'
 
     # use special `attr` value `_name` to extract tag name of the matched element
     >>> String(css='span', quant=1, attr='_name').parse('<span>hello</span>')
-    u'span'
+    'span'
 
     >>> String(css='span', callback=int).parse('<span>1</span><span>2</span>')
     [1, 2]
@@ -139,15 +139,15 @@ Example:
     >>> content = '<div id="main"> <a href="/test">Link</a> </div>'
 
     >>> Url(css='a', quant=1).parse(content)
-    u'/test'
+    '/test'
 
     >>> Url(css='a', quant=1).parse(content, url='http://github.com/Mimino666')
-    u'http://github.com/test'  # absolute url address. Told ya!
+    'http://github.com/test'  # absolute url address. Told ya!
 
     >>> Prefix(css='#main', children=[
     ...   Url(css='a', quant=1)
     ... ]).parse(content, url='http://github.com/Mimino666')  # you can pass url also to ancestor's parse(). It will propagate down.
-    u'http://github.com/test'
+    'http://github.com/test'
 
 
 --------
@@ -212,11 +212,11 @@ Example:
     <Element span at 0x2ac2990>
 
     >>> Element(css='span', quant=1, callback=lambda el: el.text).parse('<span>Hello</span>')
-    u'Hello'
+    'Hello'
 
     # same as above
     >>> Element(xpath='//span/text()', quant=1).parse('<span>Hello</span>')
-    u'Hello'
+    'Hello'
 
 
 -----
@@ -243,8 +243,8 @@ Example:
     ...     String(name='id', xpath='self::*', quant=1, attr='id'),
     ...     String(name='name', xpath='self::*', quant=1)
     ... ]).parse(content)
-    [{'name': u'michal', 'id': u'id1'},
-     {'name': u'peter', 'id': u'id2'}]
+    [{'name': 'michal', 'id': 'id1'},
+     {'name': 'peter', 'id': 'id2'}]
 
 
 ------
@@ -297,11 +297,11 @@ Example:
 
   # when `name` is not specified, raw value is returned
   >>> String(css='span', quant=1).parse('<span>Hello!</span>')
-  u'Hello!'
+  'Hello!'
 
   # when `name` is specified, dictionary is returned with `name` as the key
   >>> String(name='message', css='span', quant=1).parse('<span>Hello!</span>')
-  {'message': u'Hello!'}
+  {'message': 'Hello!'}
 
 
 -----------
@@ -378,22 +378,22 @@ Example:
 .. code-block:: python
 
     >>> String(css='.full-name', quant=1).parse(content)  # return single value
-    u'John Rambo'
+    'John Rambo'
 
     >>> String(css='.full-name', quant='1').parse(content)  # same as above
-    u'John Rambo'
+    'John Rambo'
 
     >>> String(css='.full-name', quant=(1,2)).parse(content)  # return list of values
-    [u'John Rambo']
+    ['John Rambo']
 
     >>> String(css='.full-name', quant='1,2').parse(content)  # same as above
-    [u'John Rambo']
+    ['John Rambo']
 
     >>> String(css='.middle-name', quant='?').parse(content)  # return single value or None
     None
 
     >>> String(css='.job-titles', quant='+').parse(content)  # return list of values
-    [u'President', u'US Senator', u'State Senator', u'Senior Lecturer in Law']
+    ['President', 'US Senator', 'State Senator', 'Senior Lecturer in Law']
 
     >>> String(css='.friends', quant='*').parse(content)  # return possibly empty list of values
     []
@@ -437,22 +437,22 @@ Example:
     >>> content = '<span class="name">Barack <strong>Obama</strong> III.</span> <a href="/test">Link</a>'
 
     >>> String(css='.name', quant=1).parse(content)  # default attr is "_text"
-    u'Barack  III.'
+    'Barack  III.'
 
     >>> String(css='.name', quant=1, attr='_text').parse(content)  # same as above
-    u'Barack  III.'
+    'Barack  III.'
 
     >>> String(css='.name', quant=1, attr='_all_text').parse(content)  # all text
-    u'Barack Obama III.'
+    'Barack Obama III.'
 
     >>> String(css='.name', quant=1, attr='_name').parse(content)  # tag name
-    u'span'
+    'span'
 
     >>> Url(css='a', quant='1').parse(content)  # Url extracts href by default
-    u'/test'
+    '/test'
 
     >>> String(css='a', quant='1', attr='id').parse(content)  # non-existent attributes return empty string
-    u''
+    ''
 
 
 --------
@@ -472,7 +472,7 @@ Example:
     [1, 2]
 
     >>> Element(css='span', quant=1, callback=lambda el: el.text).parse('<span>Hello</span>')
-    u'Hello'
+    'Hello'
 
 --------
 children
@@ -526,7 +526,7 @@ Example:
     ...   String(name='title', xpath='imdb:title', quant=1),
     ...   String(name='year', xpath='imdb:year', quant=1)
     ... ]).parse(content)
-    {'title': u'The Shawshank Redemption', 'year': u'1994'}
+    {'title': 'The Shawshank Redemption', 'year': '1994'}
 
 
 ====================

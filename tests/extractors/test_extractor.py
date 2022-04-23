@@ -1,5 +1,4 @@
 import unittest
-import six
 
 from xextract.extractors.lxml_extractor import XPathExtractor, XmlXPathExtractor, HtmlXPathExtractor
 
@@ -22,19 +21,19 @@ class TestXpathExtractor(unittest.TestCase):
                          [x.extract() for x in xpath.select('//input')])
 
         self.assertEqual([x.extract() for x in xpath.select('//input[@name="a"]/@name')],
-                         [u'a'])
+                         ['a'])
         self.assertEqual([x.extract() for x in xpath.select('number(concat(//input[@name="a"]/@value, //input[@name="b"]/@value))')],
-                         [u'12.0'])
+                         ['12.0'])
 
         self.assertEqual(xpath.select('concat("xpath", "rules")').extract(),
-                         [u'xpathrules'])
+                         ['xpathrules'])
         self.assertEqual([x.extract() for x in xpath.select('concat(//input[@name="a"]/@value, //input[@name="b"]/@value)')],
-                         [u'12'])
+                         ['12'])
 
     def test_extractor_unicode_query(self):
-        text = u'<p><input name="\xa9" value="1"/></p>'
+        text = '<p><input name="\xa9" value="1"/></p>'
         xpath = self.hxs_cls(text)
-        self.assertEqual(xpath.select(u'//input[@name="\xa9"]/@value').extract(), [u'1'])
+        self.assertEqual(xpath.select('//input[@name="\xa9"]/@value').extract(), ['1'])
 
     def test_extractor_same_type(self):
         '''Test XPathExtractor returning the same type in x() method.'''
@@ -47,8 +46,8 @@ class TestXpathExtractor(unittest.TestCase):
     def test_extractor_boolean_result(self):
         text = '<p><input name="a" value="1"/><input name="b" value="2"/></p>'
         xs = self.hxs_cls(text)
-        self.assertEqual(xs.select('//input[@name="a"]/@name="a"').extract(), [u'1'])
-        self.assertEqual(xs.select('//input[@name="a"]/@name="n"').extract(), [u'0'])
+        self.assertEqual(xs.select('//input[@name="a"]/@name="a"').extract(), ['1'])
+        self.assertEqual(xs.select('//input[@name="a"]/@name="n"').extract(), ['0'])
 
     def test_extractor_xml_html(self):
         '''Test that XML and HTML XPathExtractor's behave differently.'''
@@ -56,10 +55,10 @@ class TestXpathExtractor(unittest.TestCase):
         text = '<div><img src="a.jpg"><p>Hello</div>'
 
         self.assertEqual(self.xxs_cls(text).select('//div').extract(),
-                         [u'<div><img src="a.jpg"><p>Hello</p></img></div>'])
+                         ['<div><img src="a.jpg"><p>Hello</p></img></div>'])
 
         self.assertEqual(self.hxs_cls(text).select('//div').extract(),
-                         [u'<div><img src="a.jpg"><p>Hello</p></div>'])
+                         ['<div><img src="a.jpg"><p>Hello</p></div>'])
 
     def test_extractor_nested(self):
         '''Nested extractor tests.'''
@@ -78,18 +77,18 @@ class TestXpathExtractor(unittest.TestCase):
 
         x = self.hxs_cls(text)
         divtwo = x.select('//div[@class="two"]')
-        self.assertEqual(list(map(six.text_type.strip, divtwo.select('//li').extract())),
+        self.assertEqual(list(map(str.strip, divtwo.select('//li').extract())),
                          ['<li>one</li>', '<li>two</li>', '<li>four</li>', '<li>five</li>', '<li>six</li>'])
-        self.assertEqual(list(map(six.text_type.strip, divtwo.select('./ul/li').extract())),
+        self.assertEqual(list(map(str.strip, divtwo.select('./ul/li').extract())),
                          ['<li>four</li>', '<li>five</li>', '<li>six</li>'])
-        self.assertEqual(list(map(six.text_type.strip, divtwo.select('.//li').extract())),
+        self.assertEqual(list(map(str.strip, divtwo.select('.//li').extract())),
                          ['<li>four</li>', '<li>five</li>', '<li>six</li>'])
         self.assertEqual(divtwo.select('./li').extract(),
                          [])
 
     def test_dont_strip(self):
         hxs = self.hxs_cls('<div>fff: <a href="#">zzz</a></div>')
-        self.assertEqual(hxs.select('//text()').extract(), [u'fff: ', u'zzz'])
+        self.assertEqual(hxs.select('//text()').extract(), ['fff: ', 'zzz'])
 
     def test_extractor_namespaces_simple(self):
         text = '''
@@ -100,7 +99,7 @@ class TestXpathExtractor(unittest.TestCase):
         '''
         x = self.xxs_cls(text)
         x.register_namespace('somens', 'http://github.com/')
-        self.assertEqual(x.select('//somens:a/text()').extract(), [u'take this'])
+        self.assertEqual(x.select('//somens:a/text()').extract(), ['take this'])
 
     def test_extractor_namespaces_multiple(self):
         text = '''<?xml version="1.0" encoding="UTF-8"?>
@@ -127,15 +126,15 @@ class TestXpathExtractor(unittest.TestCase):
     def test_extractor_over_text(self):
         hxs = self.hxs_cls('<root>lala</root>')
         self.assertEqual(hxs.extract(),
-                         u'<html><body><root>lala</root></body></html>')
+                         '<html><body><root>lala</root></body></html>')
 
         xxs = self.xxs_cls('<root>lala</root>')
         self.assertEqual(xxs.extract(),
-                         u'<root>lala</root>')
+                         '<root>lala</root>')
 
         xxs = self.xxs_cls('<root>lala</root>')
         self.assertEqual(xxs.select('.').extract(),
-                         [u'<root>lala</root>'])
+                         ['<root>lala</root>'])
 
     def test_extractor_invalid_xpath(self):
         x = self.hxs_cls('<html></html>')
@@ -154,20 +153,20 @@ class TestXpathExtractor(unittest.TestCase):
         self.xxs_cls(text).select('//text()').extract()
 
     def test_select_on_unevaluable_nodes(self):
-        r = self.hxs_cls(u'<span class="big">some text</span>')
+        r = self.hxs_cls('<span class="big">some text</span>')
         # Text node
         x1 = r.select('//text()')
-        self.assertEquals(x1.extract(), [u'some text'])
-        self.assertEquals(x1.select('.//b').extract(), [])
+        self.assertEqual(x1.extract(), ['some text'])
+        self.assertEqual(x1.select('.//b').extract(), [])
         # Tag attribute
         x1 = r.select('//span/@class')
-        self.assertEquals(x1.extract(), [u'big'])
-        self.assertEquals(x1.select('.//text()').extract(), [])
+        self.assertEqual(x1.extract(), ['big'])
+        self.assertEqual(x1.select('.//text()').extract(), [])
 
     def test_select_on_text_nodes(self):
-        r = self.hxs_cls(u'<div><b>Options:</b>opt1</div><div><b>Other</b>opt2</div>')
+        r = self.hxs_cls('<div><b>Options:</b>opt1</div><div><b>Other</b>opt2</div>')
         x1 = r.select('//div/descendant::text()[preceding-sibling::b[contains(text(), "Options")]]')
-        self.assertEquals(x1.extract(), [u'opt1'])
+        self.assertEqual(x1.extract(), ['opt1'])
 
         x1 = r.select('//div/descendant::text()/preceding-sibling::b[contains(text(), "Options")]')
-        self.assertEquals(x1.extract(), [u'<b>Options:</b>'])
+        self.assertEqual(x1.extract(), ['<b>Options:</b>'])
