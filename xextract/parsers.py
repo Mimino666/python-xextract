@@ -120,10 +120,18 @@ class Prefix(ChildrenParserMixin, BaseParser):
 
 
 class BaseNamedParser(BaseParser):
-    def __init__(self, name=None, quant='*', callback=None, **kwargs):
+    def __init__(self, name=None, count=None, quant=None, callback=None, **kwargs):  # `quant` is deprecated
+        if quant is not None:
+            if count is not None:
+                raise ParserError('At most one of "count" or "quant" attributes can be specified.')
+            count = quant
+
+        if count is None:
+            count = '*'
+
         super(BaseNamedParser, self).__init__(**kwargs)
         self.name = name
-        self.quantity = Quantity(quant)
+        self.quantity = Quantity(count)
         self.callback = callback
 
     def _process_nodes(self, nodes, context):

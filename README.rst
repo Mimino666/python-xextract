@@ -40,17 +40,17 @@ Let's parse `The Shawshank Redemption <http://www.imdb.com/title/tt0111161/>`_'s
   >>> from xextract import String, Group
 
   # extract title with css selector
-  >>> String(css='h1[itemprop="name"]', quant=1).parse(response.text)
+  >>> String(css='h1[itemprop="name"]', count=1).parse(response.text)
   'The Shawshank Redemption'
 
   # extract release year with xpath selector
-  >>> String(xpath='//*[@id="titleYear"]/a', quant=1, callback=int).parse(response.text)
+  >>> String(xpath='//*[@id="titleYear"]/a', count=1, callback=int).parse(response.text)
   1994
 
   # extract structured data
   >>> Group(css='.cast_list tr:not(:first-child)', children=[
-  ...   String(name='name', css='[itemprop="actor"]', attr='_all_text', quant=1),
-  ...   String(name='character', css='.character', attr='_all_text', quant=1)
+  ...   String(name='name', css='[itemprop="actor"]', attr='_all_text', count=1),
+  ...   String(name='character', css='.character', attr='_all_text', count=1)
   ... ]).parse(response.text)
   [
    {'name': 'Tim Robbins', 'character': 'Andy Dufresne'},
@@ -84,7 +84,7 @@ Parsers
 String
 ------
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `count`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional), `namespaces`_ (optional)
 
 Extract string data from the matched element(s).
 Extracted value is always unicode.
@@ -101,18 +101,18 @@ Example:
 .. code-block:: python
 
     >>> from xextract import String
-    >>> String(css='span', quant=1).parse('<span>Hello <b>world</b>!</span>')
+    >>> String(css='span', count=1).parse('<span>Hello <b>world</b>!</span>')
     'Hello !'
 
-    >>> String(css='span', quant=1, attr='class').parse('<span class="text-success"></span>')
+    >>> String(css='span', count=1, attr='class').parse('<span class="text-success"></span>')
     'text-success'
 
     # use special `attr` value `_all_text` to extract and concantenate text out of all descendants
-    >>> String(css='span', quant=1, attr='_all_text').parse('<span>Hello <b>world</b>!</span>')
+    >>> String(css='span', count=1, attr='_all_text').parse('<span>Hello <b>world</b>!</span>')
     'Hello world!'
 
     # use special `attr` value `_name` to extract tag name of the matched element
-    >>> String(css='span', quant=1, attr='_name').parse('<span>hello</span>')
+    >>> String(css='span', count=1, attr='_name').parse('<span>hello</span>')
     'span'
 
     >>> String(css='span', callback=int).parse('<span>1</span><span>2</span>')
@@ -122,7 +122,7 @@ Example:
 Url
 ---
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"href"``), `callback`_ (optional), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `count`_ (optional, default ``"*"``), `attr`_ (optional, default ``"href"``), `callback`_ (optional), `namespaces`_ (optional)
 
 Behaves like ``String`` parser, but with two exceptions:
 
@@ -138,14 +138,14 @@ Example:
     >>> from xextract import Url, Prefix
     >>> content = '<div id="main"> <a href="/test">Link</a> </div>'
 
-    >>> Url(css='a', quant=1).parse(content)
+    >>> Url(css='a', count=1).parse(content)
     '/test'
 
-    >>> Url(css='a', quant=1).parse(content, url='http://github.com/Mimino666')
+    >>> Url(css='a', count=1).parse(content, url='http://github.com/Mimino666')
     'http://github.com/test'  # absolute url address. Told ya!
 
     >>> Prefix(css='#main', children=[
-    ...   Url(css='a', quant=1)
+    ...   Url(css='a', count=1)
     ... ]).parse(content, url='http://github.com/Mimino666')  # you can pass url also to ancestor's parse(). It will propagate down.
     'http://github.com/test'
 
@@ -154,7 +154,7 @@ Example:
 DateTime
 --------
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), ``format`` (**required**), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional) `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), ``format`` (**required**), `count`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional) `namespaces`_ (optional)
 
 Returns the ``datetime.datetime`` object constructed out of the extracted data: ``datetime.strptime(extracted_data, format)``.
 
@@ -167,7 +167,7 @@ Example:
 .. code-block:: python
 
     >>> from xextract import DateTime
-    >>> DateTime(css='span', quant=1, format='%d.%m.%Y %H:%M').parse('<span>24.12.2015 5:30</span>')
+    >>> DateTime(css='span', count=1, format='%d.%m.%Y %H:%M').parse('<span>24.12.2015 5:30</span>')
     datetime.datetime(2015, 12, 24, 50, 30)
 
 
@@ -175,7 +175,7 @@ Example:
 Date
 ----
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), ``format`` (**required**), `quant`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional) `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), ``format`` (**required**), `count`_ (optional, default ``"*"``), `attr`_ (optional, default ``"_text"``), `callback`_ (optional) `namespaces`_ (optional)
 
 Returns the ``datetime.date`` object constructed out of the extracted data: ``datetime.strptime(extracted_data, format).date()``.
 
@@ -188,7 +188,7 @@ Example:
 .. code-block:: python
 
     >>> from xextract import Date
-    >>> Date(css='span', quant=1, format='%d.%m.%Y').parse('<span>24.12.2015</span>')
+    >>> Date(css='span', count=1, format='%d.%m.%Y').parse('<span>24.12.2015</span>')
     datetime.date(2015, 12, 24)
 
 
@@ -196,7 +196,7 @@ Example:
 Element
 -------
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `quant`_ (optional, default ``"*"``), `callback`_ (optional), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `count`_ (optional, default ``"*"``), `callback`_ (optional), `namespaces`_ (optional)
 
 Returns lxml instance (``lxml.etree._Element``) of the matched element(s).
 If you use xpath expression and match the text content of the element (e.g. ``text()`` or ``@attr``), unicode is returned.
@@ -208,14 +208,14 @@ Example:
 .. code-block:: python
 
     >>> from xextract import Element
-    >>> Element(css='span', quant=1).parse('<span>Hello</span>')
+    >>> Element(css='span', count=1).parse('<span>Hello</span>')
     <Element span at 0x2ac2990>
 
-    >>> Element(css='span', quant=1, callback=lambda el: el.text).parse('<span>Hello</span>')
+    >>> Element(css='span', count=1, callback=lambda el: el.text).parse('<span>Hello</span>')
     'Hello'
 
     # same as above
-    >>> Element(xpath='//span/text()', quant=1).parse('<span>Hello</span>')
+    >>> Element(xpath='//span/text()', count=1).parse('<span>Hello</span>')
     'Hello'
 
 
@@ -223,7 +223,7 @@ Example:
 Group
 -----
 
-**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `children`_ (**required**), `quant`_ (optional, default ``"*"``), `callback`_ (optional), `namespaces`_ (optional)
+**Parameters**: `name`_ (optional), `css / xpath`_ (optional, default ``"self::*"``), `children`_ (**required**), `count`_ (optional, default ``"*"``), `callback`_ (optional), `namespaces`_ (optional)
 
 For each element matched by css/xpath selector returns the dictionary containing the data extracted by the parsers listed in ``children`` parameter.
 All parsers listed in ``children`` parameter **must** have ``name`` specified - this is then used as the key in dictionary.
@@ -239,9 +239,9 @@ Example:
     >>> from xextract import Group
     >>> content = '<ul><li id="id1">michal</li> <li id="id2">peter</li></ul>'
 
-    >>> Group(css='li', quant=2, children=[
-    ...     String(name='id', xpath='self::*', quant=1, attr='id'),
-    ...     String(name='name', xpath='self::*', quant=1)
+    >>> Group(css='li', count=2, children=[
+    ...     String(name='id', xpath='self::*', count=1, attr='id'),
+    ...     String(name='name', xpath='self::*', count=1)
     ... ]).parse(content)
     [{'name': 'michal', 'id': 'id1'},
      {'name': 'peter', 'id': 'id2'}]
@@ -296,11 +296,11 @@ Example:
 .. code-block:: python
 
   # when `name` is not specified, raw value is returned
-  >>> String(css='span', quant=1).parse('<span>Hello!</span>')
+  >>> String(css='span', count=1).parse('<span>Hello!</span>')
   'Hello!'
 
   # when `name` is specified, dictionary is returned with `name` as the key
-  >>> String(name='message', css='span', quant=1).parse('<span>Hello!</span>')
+  >>> String(name='message', css='span', count=1).parse('<span>Hello!</span>')
   {'message': 'Hello!'}
 
 
@@ -324,36 +324,36 @@ Example:
 
     Prefix(xpath='//*[@id="profile"]', children=[
         # equivalent to: //*[@id="profile"]/descendant-or-self::*[@class="name"]
-        String(name='name', css='.name', quant=1),
+        String(name='name', css='.name', count=1),
 
         # equivalent to: //*[@id="profile"]/*[@class="title"]
-        String(name='title', xpath='*[@class="title"]', quant=1),
+        String(name='title', xpath='*[@class="title"]', count=1),
 
         # equivalent to: //*[@class="subtitle"]
-        String(name='subtitle', xpath='//*[@class="subtitle"]', quant=1)
+        String(name='subtitle', xpath='//*[@class="subtitle"]', count=1)
     ])
 
 
 -----
-quant
+count
 -----
 
 **Parsers**: `String`_, `Url`_, `DateTime`_, `Date`_, `Element`_, `Group`_
 
 **Default value**: ``"*"``
 
-``quant`` specifies the expected number of elements to be matched with css/xpath selector. It serves two purposes:
+``count`` specifies the expected number of elements to be matched with css/xpath selector. It serves two purposes:
 
-1. Number of matched elements is checked against the ``quant`` parameter. If the number of elements doesn't match the expected quantity, ``xextract.parsers.ParsingError`` exception is raised. This way you will be notified, when the website has changed its structure.
+1. Number of matched elements is checked against the ``count`` parameter. If the number of elements doesn't match the expected countity, ``xextract.parsers.ParsingError`` exception is raised. This way you will be notified, when the website has changed its structure.
 2. It tells the parser whether to return a single extracted value or a list of values. See the table below.
 
-Syntax for ``quant`` mimics the regular expressions.
+Syntax for ``count`` mimics the regular expressions.
 You can either pass the value as a string, single integer or tuple of two integers.
 
-Depending on the value of ``quant``, the parser returns either a single extracted value or a list of values.
+Depending on the value of ``count``, the parser returns either a single extracted value or a list of values.
 
 +-------------------+-----------------------------------------------+-----------------------------+
-| Value of ``quant``| Meaning                                       | Extracted data              |
+| Value of ``count``| Meaning                                       | Extracted data              |
 +===================+===============================================+=============================+
 | ``"*"`` (default) | Zero or more elements.                        | List of values              |
 +-------------------+-----------------------------------------------+-----------------------------+
@@ -377,28 +377,28 @@ Example:
 
 .. code-block:: python
 
-    >>> String(css='.full-name', quant=1).parse(content)  # return single value
+    >>> String(css='.full-name', count=1).parse(content)  # return single value
     'John Rambo'
 
-    >>> String(css='.full-name', quant='1').parse(content)  # same as above
+    >>> String(css='.full-name', count='1').parse(content)  # same as above
     'John Rambo'
 
-    >>> String(css='.full-name', quant=(1,2)).parse(content)  # return list of values
+    >>> String(css='.full-name', count=(1,2)).parse(content)  # return list of values
     ['John Rambo']
 
-    >>> String(css='.full-name', quant='1,2').parse(content)  # same as above
+    >>> String(css='.full-name', count='1,2').parse(content)  # same as above
     ['John Rambo']
 
-    >>> String(css='.middle-name', quant='?').parse(content)  # return single value or None
+    >>> String(css='.middle-name', count='?').parse(content)  # return single value or None
     None
 
-    >>> String(css='.job-titles', quant='+').parse(content)  # return list of values
+    >>> String(css='.job-titles', count='+').parse(content)  # return list of values
     ['President', 'US Senator', 'State Senator', 'Senior Lecturer in Law']
 
-    >>> String(css='.friends', quant='*').parse(content)  # return possibly empty list of values
+    >>> String(css='.friends', count='*').parse(content)  # return possibly empty list of values
     []
 
-    >>> String(css='.friends', quant='+').parse(content)  # raise exception, when no elements are matched
+    >>> String(css='.friends', count='+').parse(content)  # raise exception, when no elements are matched
     xextract.parsers.ParsingError: Parser String matched 0 elements ("+" expected).
 
 
@@ -436,22 +436,22 @@ Example:
     >>> from xextract import String, Url
     >>> content = '<span class="name">Barack <strong>Obama</strong> III.</span> <a href="/test">Link</a>'
 
-    >>> String(css='.name', quant=1).parse(content)  # default attr is "_text"
+    >>> String(css='.name', count=1).parse(content)  # default attr is "_text"
     'Barack  III.'
 
-    >>> String(css='.name', quant=1, attr='_text').parse(content)  # same as above
+    >>> String(css='.name', count=1, attr='_text').parse(content)  # same as above
     'Barack  III.'
 
-    >>> String(css='.name', quant=1, attr='_all_text').parse(content)  # all text
+    >>> String(css='.name', count=1, attr='_all_text').parse(content)  # all text
     'Barack Obama III.'
 
-    >>> String(css='.name', quant=1, attr='_name').parse(content)  # tag name
+    >>> String(css='.name', count=1, attr='_name').parse(content)  # tag name
     'span'
 
-    >>> Url(css='a', quant='1').parse(content)  # Url extracts href by default
+    >>> Url(css='a', count='1').parse(content)  # Url extracts href by default
     '/test'
 
-    >>> String(css='a', quant='1', attr='id').parse(content)  # non-existent attributes return empty string
+    >>> String(css='a', count='1', attr='id').parse(content)  # non-existent attributes return empty string
     ''
 
 
@@ -471,7 +471,7 @@ Example:
     >>> String(css='span', callback=int).parse('<span>1</span><span>2</span>')
     [1, 2]
 
-    >>> Element(css='span', quant=1, callback=lambda el: el.text).parse('<span>Hello</span>')
+    >>> Element(css='span', count=1, callback=lambda el: el.text).parse('<span>Hello</span>')
     'Hello'
 
 --------
@@ -491,13 +491,13 @@ Example:
 
     Prefix(xpath='//*[@id="profile"]', children=[
         # equivalent to: //*[@id="profile"]/descendant-or-self::*[@class="name"]
-        String(name='name', css='.name', quant=1),
+        String(name='name', css='.name', count=1),
 
         # equivalent to: //*[@id="profile"]/*[@class="title"]
-        String(name='title', xpath='*[@class="title"]', quant=1),
+        String(name='title', xpath='*[@class="title"]', count=1),
 
         # equivalent to: //*[@class="subtitle"]
-        String(name='subtitle', xpath='//*[@class="subtitle"]', quant=1)
+        String(name='subtitle', xpath='//*[@class="subtitle"]', count=1)
     ])
 
 ----------
@@ -523,8 +523,8 @@ Example:
     >>> nsmap = {'imdb': 'http://imdb.com/ns/'}  # use arbitrary prefix for default namespace
 
     >>> Prefix(xpath='//imdb:movie', namespaces=nsmap, children=[  # pass namespaces to the outermost parser
-    ...   String(name='title', xpath='imdb:title', quant=1),
-    ...   String(name='year', xpath='imdb:year', quant=1)
+    ...   String(name='title', xpath='imdb:title', count=1),
+    ...   String(name='year', xpath='imdb:year', count=1)
     ... ]).parse(content)
     {'title': 'The Shawshank Redemption', 'year': '1994'}
 

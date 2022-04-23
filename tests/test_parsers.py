@@ -119,38 +119,38 @@ class TestBaseNamedParser(TestBaseParser):
     '''
 
     def test_check_quantity(self):
-        self.assertRaises(ParsingError, self.parser_class(css='li', quant=0, **self.parser_kwargs).parse, self.html)
-        self.assertRaises(ParsingError, self.parser_class(css='li', quant=1, **self.parser_kwargs).parse, self.html)
-        self.assertRaises(ParsingError, self.parser_class(css='ul', quant=2, **self.parser_kwargs).parse, self.html)
-        self.assertRaises(ParsingError, self.parser_class(css='ul', quant=(2, 3), **self.parser_kwargs).parse, self.html)
-        self.assertRaises(ParsingError, self.parser_class(css='li', quant='?', **self.parser_kwargs).parse, self.html)
-        self.assertRaises(ParsingError, self.parser_class(css='ol', quant='+', **self.parser_kwargs).parse, self.html)
+        self.assertRaises(ParsingError, self.parser_class(css='li', count=0, **self.parser_kwargs).parse, self.html)
+        self.assertRaises(ParsingError, self.parser_class(css='li', count=1, **self.parser_kwargs).parse, self.html)
+        self.assertRaises(ParsingError, self.parser_class(css='ul', count=2, **self.parser_kwargs).parse, self.html)
+        self.assertRaises(ParsingError, self.parser_class(css='ul', count=(2, 3), **self.parser_kwargs).parse, self.html)
+        self.assertRaises(ParsingError, self.parser_class(css='li', count='?', **self.parser_kwargs).parse, self.html)
+        self.assertRaises(ParsingError, self.parser_class(css='ol', count='+', **self.parser_kwargs).parse, self.html)
 
     def test_check_quantity_return_type(self):
-        self.assertIsNone(self.parser_class(css='ol', quant=0, **self.parser_kwargs).parse(self.html)['val'])
-        self.assertIsInstance(self.parser_class(css='ul', quant=1, **self.parser_kwargs).parse(self.html)['val'], self.return_value_type)
-        self.assertIsInstance(self.parser_class(css='li', quant=2, **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsNone(self.parser_class(css='ol', count=0, **self.parser_kwargs).parse(self.html)['val'])
+        self.assertIsInstance(self.parser_class(css='ul', count=1, **self.parser_kwargs).parse(self.html)['val'], self.return_value_type)
+        self.assertIsInstance(self.parser_class(css='li', count=2, **self.parser_kwargs).parse(self.html)['val'], list)
 
-        self.assertIsInstance(self.parser_class(css='ol', quant=(0, 0), **self.parser_kwargs).parse(self.html)['val'], list)
-        self.assertIsInstance(self.parser_class(css='ul', quant=(1, 1), **self.parser_kwargs).parse(self.html)['val'], list)
-        self.assertIsInstance(self.parser_class(css='li', quant=(1, 2), **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsInstance(self.parser_class(css='ol', count=(0, 0), **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsInstance(self.parser_class(css='ul', count=(1, 1), **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsInstance(self.parser_class(css='li', count=(1, 2), **self.parser_kwargs).parse(self.html)['val'], list)
 
-        self.assertIsNone(self.parser_class(css='ol', quant='?', **self.parser_kwargs).parse(self.html)['val'])
-        self.assertIsInstance(self.parser_class(css='ul', quant='?', **self.parser_kwargs).parse(self.html)['val'], self.return_value_type)
+        self.assertIsNone(self.parser_class(css='ol', count='?', **self.parser_kwargs).parse(self.html)['val'])
+        self.assertIsInstance(self.parser_class(css='ul', count='?', **self.parser_kwargs).parse(self.html)['val'], self.return_value_type)
 
-        self.assertIsInstance(self.parser_class(css='ol', quant='*', **self.parser_kwargs).parse(self.html)['val'], list)
-        self.assertIsInstance(self.parser_class(css='ul', quant='*', **self.parser_kwargs).parse(self.html)['val'], list)
-        self.assertIsInstance(self.parser_class(css='li', quant='*', **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsInstance(self.parser_class(css='ol', count='*', **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsInstance(self.parser_class(css='ul', count='*', **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsInstance(self.parser_class(css='li', count='*', **self.parser_kwargs).parse(self.html)['val'], list)
 
-        self.assertIsInstance(self.parser_class(css='ul', quant='+', **self.parser_kwargs).parse(self.html)['val'], list)
-        self.assertIsInstance(self.parser_class(css='li', quant='+', **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsInstance(self.parser_class(css='ul', count='+', **self.parser_kwargs).parse(self.html)['val'], list)
+        self.assertIsInstance(self.parser_class(css='li', count='+', **self.parser_kwargs).parse(self.html)['val'], list)
 
     def test_missing_name(self):
         no_name_parser_kwargs = copy.copy(self.parser_kwargs)
         del no_name_parser_kwargs['name']
-        self.assertIsNone(self.parser_class(css='ol', quant=0, **no_name_parser_kwargs).parse(self.html))
-        self.assertIsInstance(self.parser_class(css='ul', quant=1, **no_name_parser_kwargs).parse(self.html), self.return_value_type)
-        self.assertIsInstance(self.parser_class(css='li', quant=2, **no_name_parser_kwargs).parse(self.html), list)
+        self.assertIsNone(self.parser_class(css='ol', count=0, **no_name_parser_kwargs).parse(self.html))
+        self.assertIsInstance(self.parser_class(css='ul', count=1, **no_name_parser_kwargs).parse(self.html), self.return_value_type)
+        self.assertIsInstance(self.parser_class(css='li', count=2, **no_name_parser_kwargs).parse(self.html), list)
 
 
 class TestString(TestBaseNamedParser):
@@ -160,18 +160,18 @@ class TestString(TestBaseNamedParser):
         html = '<span data-val="rocks">Hello <b>world</b>!</span>'
 
         # by default extract _text
-        self.assertEqual(String(name='val', css='span', quant=1).parse(html)['val'], 'Hello !')
+        self.assertEqual(String(name='val', css='span', count=1).parse(html)['val'], 'Hello !')
 
-        self.assertEqual(String(name='val', css='span', quant=1, attr='_text').parse(html)['val'], 'Hello !')
-        self.assertEqual(String(name='val', css='span', quant=1, attr='_all_text').parse(html)['val'], 'Hello world!')
-        self.assertEqual(String(name='val', css='span', quant=1, attr='data-val').parse(html)['val'], 'rocks')
-        self.assertEqual(String(name='val', css='span', quant=1, attr='data-invalid').parse(html)['val'], '')
+        self.assertEqual(String(name='val', css='span', count=1, attr='_text').parse(html)['val'], 'Hello !')
+        self.assertEqual(String(name='val', css='span', count=1, attr='_all_text').parse(html)['val'], 'Hello world!')
+        self.assertEqual(String(name='val', css='span', count=1, attr='data-val').parse(html)['val'], 'rocks')
+        self.assertEqual(String(name='val', css='span', count=1, attr='data-invalid').parse(html)['val'], '')
 
     def test_callback(self):
         html = '<span>1</span><span>2</span>'
         self.assertListEqual(String(css='span').parse(html), ['1', '2'])
         self.assertListEqual(String(css='span', callback=int).parse(html), [1, 2])
-        self.assertEqual(String(css='span:first-child', callback=int, quant=1).parse(html), 1)
+        self.assertEqual(String(css='span:first-child', callback=int, count=1).parse(html), 1)
         self.assertListEqual(String(css='div', callback=int).parse(html), [])
 
 
@@ -182,18 +182,18 @@ class TestUrl(TestBaseNamedParser):
         html = '<a href="/test?a=b" data-val="/val">Hello <b>world</b>!</a>'
 
         # by default extract href
-        self.assertEqual(Url(name='val', css='a', quant=1).parse(html)['val'], '/test?a=b')
-        self.assertEqual(Url(name='val', css='a', quant=1).parse(html, url='http://example.com/a/b/c')['val'], 'http://example.com/test?a=b')
+        self.assertEqual(Url(name='val', css='a', count=1).parse(html)['val'], '/test?a=b')
+        self.assertEqual(Url(name='val', css='a', count=1).parse(html, url='http://example.com/a/b/c')['val'], 'http://example.com/test?a=b')
 
-        self.assertEqual(Url(name='val', css='a', quant=1, attr='data-val').parse(html)['val'], '/val')
-        self.assertEqual(Url(name='val', css='a', quant=1, attr='data-val').parse(html, url='http://example.com/a/b/c')['val'], 'http://example.com/val')
+        self.assertEqual(Url(name='val', css='a', count=1, attr='data-val').parse(html)['val'], '/val')
+        self.assertEqual(Url(name='val', css='a', count=1, attr='data-val').parse(html, url='http://example.com/a/b/c')['val'], 'http://example.com/val')
 
     def test_callback(self):
         def _parse_scheme(url):
             return urlparse(url).scheme
         html = '<a href="/test"></a>'
-        self.assertEqual(Url(css='a', quant=1, callback=_parse_scheme).parse(html), '')
-        self.assertEqual(Url(css='a', quant=1, callback=_parse_scheme).parse(html, url='http://example.com/a/b/c'), 'http')
+        self.assertEqual(Url(css='a', count=1, callback=_parse_scheme).parse(html), '')
+        self.assertEqual(Url(css='a', count=1, callback=_parse_scheme).parse(html, url='http://example.com/a/b/c'), 'http')
 
 
 class TestDateTime(TestBaseNamedParser):
@@ -204,21 +204,21 @@ class TestDateTime(TestBaseNamedParser):
 
     def test_basic(self):
         html = '<span data-val="1.1.2001">24.11.2015 10:12</span>'
-        val = DateTime(name='val', css='span', quant=1, format='%d.%m.%Y %H:%M').parse(html)['val']
+        val = DateTime(name='val', css='span', count=1, format='%d.%m.%Y %H:%M').parse(html)['val']
         self.assertEqual(val, datetime(year=2015, month=11, day=24, hour=10, minute=12))
 
-        val = DateTime(name='val', css='span', quant=1, format='%d.%m.%Y', attr='data-val').parse(html)['val']
+        val = DateTime(name='val', css='span', count=1, format='%d.%m.%Y', attr='data-val').parse(html)['val']
         self.assertEqual(val, datetime(year=2001, month=1, day=1))
 
         # invalid format
-        self.assertRaises(ValueError, DateTime(name='val', css='span', quant=1, format='%d').parse, html)
+        self.assertRaises(ValueError, DateTime(name='val', css='span', count=1, format='%d').parse, html)
 
     def test_callback(self):
         def _get_day(dt):
             return dt.day
         html = '<span>24.11.2015</span>'
         self.assertEqual(
-            DateTime(css='span', quant=1, format='%d.%m.%Y', callback=_get_day).parse(html),
+            DateTime(css='span', count=1, format='%d.%m.%Y', callback=_get_day).parse(html),
             24)
 
 
@@ -230,21 +230,21 @@ class TestDate(TestBaseNamedParser):
 
     def test_basic(self):
         html = '<span data-val="1.1.2001">24.11.2015</span>'
-        val = Date(name='val', css='span', quant=1, format='%d.%m.%Y').parse(html)['val']
+        val = Date(name='val', css='span', count=1, format='%d.%m.%Y').parse(html)['val']
         self.assertEqual(val, date(year=2015, month=11, day=24))
 
-        val = Date(name='val', css='span', quant=1, format='%d.%m.%Y', attr='data-val').parse(html)['val']
+        val = Date(name='val', css='span', count=1, format='%d.%m.%Y', attr='data-val').parse(html)['val']
         self.assertEqual(val, date(year=2001, month=1, day=1))
 
         # invalid format
-        self.assertRaises(ValueError, Date(name='val', css='span', quant=1, format='%d').parse, html)
+        self.assertRaises(ValueError, Date(name='val', css='span', count=1, format='%d').parse, html)
 
     def test_callback(self):
         def _get_day(dt):
             return dt.day
         html = '<span>24.11.2015</span>'
         self.assertEqual(
-            Date(css='span', quant=1, format='%d.%m.%Y', callback=_get_day).parse(html),
+            Date(css='span', count=1, format='%d.%m.%Y', callback=_get_day).parse(html),
             24)
 
 
@@ -256,14 +256,14 @@ class TestElement(TestBaseNamedParser):
     def test_basic(self):
         html = '<span>Hello <b>world</b>!</span>'
 
-        val = Element(name='val', css='span', quant=1).parse(html)['val']
+        val = Element(name='val', css='span', count=1).parse(html)['val']
         self.assertEqual(val.tag, 'span')
-        val = Element(name='val', css='b', quant=1).parse(html)['val']
+        val = Element(name='val', css='b', count=1).parse(html)['val']
         self.assertEqual(val.tag, 'b')
 
     def test_callback(self):
         html = '<span>Hello <b>world</b>!</span>'
-        val = Element(css='b', quant=1, callback=lambda el: el.text).parse(html)
+        val = Element(css='b', count=1, callback=lambda el: el.text).parse(html)
         self.assertEqual(val, 'world')
 
     def test_text_extract(self):
@@ -272,7 +272,7 @@ class TestElement(TestBaseNamedParser):
         self.assertListEqual(val, ['Hello', ' world', '!'])
 
         html = '<span class="nice"></span>'
-        val = Element(xpath='//span/@class', quant=1).parse(html)
+        val = Element(xpath='//span/@class', count=1).parse(html)
         self.assertEqual(val, 'nice')
 
 
@@ -297,28 +297,28 @@ class TestGroup(TestBaseNamedParser):
             {'name': 'John', 'link': 'http://example.com/test'}]}
 
         # css
-        val = Group(name='val', css='li', quant=2, children=[
-            String(name='name', css='span', quant=1),
-            Url(name='link', css='a', quant='?')
+        val = Group(name='val', css='li', count=2, children=[
+            String(name='name', css='span', count=1),
+            Url(name='link', css='a', count='?')
         ]).parse(self.html, url='http://example.com/')
         self.assertDictEqual(val, extracted)
 
         # xpath
-        val = Group(name='val', css='li', quant=2, children=[
-            String(name='name', xpath='span', quant=1),
-            Url(name='link', xpath='a', quant='?')
+        val = Group(name='val', css='li', count=2, children=[
+            String(name='name', xpath='span', count=1),
+            Url(name='link', xpath='a', count='?')
         ]).parse(self.html, url='http://example.com/')
         self.assertDictEqual(val, extracted)
 
-        val = Group(name='val', css='li', quant=2, children=[
-            String(name='name', xpath='descendant::span', quant=1),
-            Url(name='link', xpath='descendant::a', quant='?')
+        val = Group(name='val', css='li', count=2, children=[
+            String(name='name', xpath='descendant::span', count=1),
+            Url(name='link', xpath='descendant::a', count='?')
         ]).parse(self.html, url='http://example.com/')
         self.assertDictEqual(val, extracted)
 
     def test_callback(self):
-        val = Group(css='li', quant=2, callback=lambda d: d['name'], children=[
-            String(name='name', css='span', quant=1),
+        val = Group(css='li', count=2, callback=lambda d: d['name'], children=[
+            String(name='name', css='span', count=1),
         ]).parse(self.html)
         self.assertListEqual(val, ['Mike', 'John'])
 
@@ -341,18 +341,18 @@ class TestPrefix(TestBaseParser):
     def test_basic(self):
         # css
         val = Prefix(css='li', children=[
-            String(name='name', css='span', quant=2)
+            String(name='name', css='span', count=2)
         ]).parse(self.html)
         self.assertDictEqual(val, {'name': ['Mike', 'John']})
 
         # xpath
         val = Prefix(xpath='//li', children=[
-            String(name='name', xpath='span', quant=2)
+            String(name='name', xpath='span', count=2)
         ]).parse(self.html)
         self.assertDictEqual(val, {'name': ['Mike', 'John']})
 
     def test_callback(self):
         val = Prefix(xpath='//li', callback=lambda d: d['name'], children=[
-            String(name='name', css='span', quant=2),
+            String(name='name', css='span', count=2),
         ]).parse(self.html)
         self.assertListEqual(val, ['Mike', 'John'])
