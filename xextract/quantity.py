@@ -24,8 +24,8 @@ class Quantity(object):
 
         if not isinstance(n, int):
             raise ValueError(
-                'Invalid argument for "check_quantity()". '
-                'Integer expected, %s received: "%s"' % (type(n), n))
+                'Invalid argument for `check_quantity()`. '
+                'Integer expected, %s received: %s' % (type(n), repr(n)))
         return self._check_quantity_func(n)
 
     def _check_star(self, n):
@@ -65,7 +65,7 @@ class Quantity(object):
             if 0 <= self.upper:
                 return self._check_1d
             else:
-                raise ValueError('Invalid quantity: "%s"' % repr(quantity))
+                raise ValueError('Invalid quantity: %s' % repr(quantity))
 
         # quantity is specified as a pair of integers
         if isinstance(quantity, (list, tuple)) and len(quantity) == 2:
@@ -75,7 +75,7 @@ class Quantity(object):
                     0 <= self.lower <= self.upper):
                 return self._check_2d
             else:
-                raise ValueError('Invalid quantity: "%s"' % repr(quantity))
+                raise ValueError('Invalid quantity: %s' % repr(quantity))
 
         # quantity is specified as a string
         if isinstance(quantity, str):
@@ -90,10 +90,10 @@ class Quantity(object):
                     if self.lower <= self.upper:
                         return getattr(self, check_funcname)
                     else:
-                        raise ValueError('Invalid quantity: "%s"' % repr(quantity))
+                        raise ValueError('Invalid quantity: %s' % repr(quantity))
 
         # quantity is of a bad type
-        raise ValueError('Invalid quantity: "%s"' % repr(quantity))
+        raise ValueError('Invalid quantity: %s' % repr(quantity))
 
     @property
     def is_single(self):
