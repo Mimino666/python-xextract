@@ -17,7 +17,7 @@ class ParserError(Exception):
 
 
 class ParsingError(Exception):
-    '''Numebr of parsed elements doesn't match the expected quantity.'''
+    '''Number of parsed elements doesn't match the expected quantity.'''
 
 
 class BaseParser(object):
