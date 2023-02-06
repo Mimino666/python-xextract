@@ -17,7 +17,7 @@ class ParserError(Exception):
 
 
 class ParsingError(Exception):
-    '''Numebr of parsed elements doesn't match the expected quantity.'''
+    '''Number of parsed elements doesn't match the expected quantity.'''
 
 
 class BaseParser(object):
@@ -39,6 +39,9 @@ class BaseParser(object):
         return self.parse(body, url)
 
     def parse(self, body, url=None):
+        if isinstance(body, etree._Element):
+            raise ParserError('You must use parse_html() or parse_xml() if passing an Element as the extractor')
+
         if isinstance(body, XPathExtractor):
             extractor = body
         else:

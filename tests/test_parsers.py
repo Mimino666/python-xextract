@@ -2,9 +2,11 @@ from datetime import datetime, date
 from urllib.parse import urlparse
 import copy
 import unittest
+from unittest.mock import patch
 
 from lxml import etree
 
+from xextract.extractors import HtmlXPathExtractor, XmlXPathExtractor
 from xextract.parsers import (
     ParserError, ParsingError, BaseParser, BaseNamedParser,
     Prefix, Group, Element, String, Url, DateTime, Date)
@@ -274,6 +276,135 @@ class TestElement(TestBaseNamedParser):
         html = '<span class="nice"></span>'
         val = Element(xpath='//span/@class', count=1).parse(html)
         self.assertEqual(val, 'nice')
+
+
+class TestElementAsExtractor(unittest.TestCase):
+    def test_element_as_parser(self):
+        """
+        we can pass an Element as the extractor to parse_*()
+        """
+        html = '''
+            <div><span>Hello world!</span></div>
+            <div></div>
+            <div><span>Hello mars!</span></div>
+        '''
+
+        # take only the first containers so we can verify that the correct descendant is chosen
+        container = Element(css='div', count=3).parse(html)[2]
+
+        val = Element(css='span', count=1).parse_html(container)
+        self.assertEqual(val.tag, 'span')
+        self.assertEqual(val.text, 'Hello mars!')
+
+    def test_element_as_parser_html(self):
+        """
+        passing Element as extractor for parse_html should use the correct parser
+        """
+
+        html = '''
+            <html>
+                <div>
+                    <script>console.log(" &lt; > ");</script>
+                    <span>a&lt;a&lsquo;</span>
+                </div>
+            </html>
+        '''
+
+        original_tostring = etree.tostring
+        original_parser = HtmlXPathExtractor._parser
+
+        # etree.HtmlParser is immutable so we can't patch it
+        # instead we patch HtmlXPathExtractor._parser which references it
+        with patch.object(HtmlXPathExtractor, attribute='_parser', autospec=True) as mock_parser:
+            mock_parser.side_effect = original_parser
+            with patch('lxml.etree.tostring', autospec=True) as mock_tostring:
+                mock_tostring.side_effect = original_tostring
+
+                ancestor = Element(css='div', count=1).parse_html(html)
+                mock_parser.assert_called_once()
+                mock_parser.reset_mock()
+                mock_tostring.assert_not_called()
+
+                script_val = String(css='script', count=1).parse_html(ancestor)
+                mock_parser.assert_not_called()
+                mock_tostring.assert_called_once()
+                self.assertEqual(mock_tostring.call_args.kwargs['method'], 'html')
+                mock_tostring.reset_mock()
+
+                span_val = String(css='span', count=1).parse_html(ancestor)
+                mock_parser.assert_not_called()
+                mock_tostring.assert_called_once()
+                self.assertEqual(mock_tostring.call_args.kwargs['method'], 'html')
+                mock_tostring.reset_mock()
+
+                # HTML has different entity processing from XML:
+                #  <script> contents are automatically CDATA
+                #  &lt; is an entity only inside <span>
+                #  &lsquo; is a valid entity
+                self.assertEqual(script_val, 'console.log(" &lt; > ");')
+                self.assertEqual(span_val, 'a<a‘')
+
+        with self.assertRaises(ParserError):
+            # .parse() is missing the html/xml specifier
+            String(css='script', count=1).parse(ancestor)
+
+    def test_element_as_parser_xml(self):
+        """
+        passing Element as extractor for parse_xml should use the correct parser
+        """
+
+        xml = '''
+            <?xml version="1.0" encoding="UTF-8"?>
+            <body xmlns="http://test.com/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                <ul>
+                    <xsi:li>
+                        <script>console.log(" &lt; > ");</script>
+                        <span>a&lt;a&lsquo;</span>
+                    </xsi:li>
+                </ul>
+            </body>
+        '''
+        namespaces = {'a': 'http://test.com/', 'b': 'http://www.w3.org/2001/XMLSchema-instance'}
+
+        original_tostring = etree.tostring
+        original_parser = XmlXPathExtractor._parser
+
+        # etree.XMLParser is immutable so we can't patch it
+        # instead we patch XmlXPathExtractor._parser which references it
+        with patch.object(XmlXPathExtractor, attribute='_parser', autospec=True) as mock_parser:
+
+            mock_parser.side_effect = original_parser
+            with patch('lxml.etree.tostring', autospec=True) as mock_tostring:
+                mock_tostring.side_effect = original_tostring
+
+                ancestor = Element(xpath='//a:body', count=1, namespaces=namespaces).parse_xml(xml)
+                mock_parser.assert_called_once()
+                mock_parser.reset_mock()
+                mock_tostring.assert_not_called()
+
+                script_val = String(xpath='//a:script', count=1, namespaces=namespaces).parse_xml(ancestor)
+                mock_parser.assert_not_called()
+                mock_tostring.assert_called_once()
+                self.assertEqual(mock_tostring.call_args.kwargs['method'], 'xml')
+                mock_tostring.reset_mock()
+
+                span_val = String(xpath='//a:span', count=1, namespaces=namespaces).parse_xml(ancestor)
+                mock_parser.assert_not_called()
+                mock_tostring.assert_called_once()
+                self.assertEqual(mock_tostring.call_args.kwargs['method'], 'xml')
+                mock_tostring.reset_mock()
+
+
+                # XML has different entity processing from HTML:
+                #  <script> contents are not automatically CDATA
+                #  &lt; is a valid entity inside both <span> and <script>
+                #  &lsquo; is not a valid entity (with libxml it also happens to break subsequent entity parsing)
+                self.assertEqual(script_val, 'console.log(" < > ");')
+                self.assertEqual(span_val, 'a<a')
+
+        with self.assertRaises(ParserError):
+            # .parse() is missing the html/xml specifier
+            String(xpath='//a:script', count=1, namespaces=namespaces).parse(ancestor)
 
 
 class TestGroup(TestBaseNamedParser):
