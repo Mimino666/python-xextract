@@ -290,9 +290,9 @@ class TestElementAsExtractor(unittest.TestCase):
         '''
 
         # take only the first containers so we can verify that the correct descendant is chosen
-        container = Element(name='val', css='div', count=3).parse(html)['val'][2]
+        container = Element(css='div', count=3).parse(html)[2]
 
-        val = Element(name='val', css='span', count=1).parse_html(container)['val']
+        val = Element(css='span', count=1).parse_html(container)
         self.assertEqual(val.tag, 'span')
         self.assertEqual(val.text, 'Hello mars!')
 
