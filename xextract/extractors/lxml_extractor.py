@@ -15,6 +15,9 @@ class XPathExtractor(object):
             self._root = _root
 
     def _get_root(self, body, encoding=None):
+        if isinstance(body, etree._Element):
+            return body
+
         body = body.strip() or self._empty_doc
         if isinstance(body, str):
             body = body.encode('utf-8')
