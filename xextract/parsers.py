@@ -244,7 +244,15 @@ class Url(String):
     def _process_values(self, values, context):
         url = context.get('url')
         if url:
-            return [urljoin(url, v.strip()) for v in values]
+            result = []
+            for v in values:
+                clean_v = v.strip()
+                try:
+                    result.append(urljoin(url, clean_v))
+                # In rare cases, urljoin() might fail with ValueError.
+                except ValueError:
+                    result.append(clean_v)
+            return result
         else:
             return [v.strip() for v in values]
 
